@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>H10 Capture v2</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050809;--sf:#0c1117;--sf2:#141c27;--bd:#1a2332;--tx:#e2e8f0;--dm:#4a5568;
+  --grn:#00ff88;--red:#ef4444;--amb:#f59e0b;--cyn:#22d3ee;--pur:#a78bfa;--blu:#3b82f6;--pnk:#f472b6}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;
+  overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.hd{padding:.5rem .8rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hd h1{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:500;letter-spacing:.05em;color:var(--dm)}
+.hd h1 span{color:var(--grn)}.hd h1 .v2{color:var(--pur)}
+.hdr{display:flex;align-items:center;gap:.5rem}
+.bg{font-family:'JetBrains Mono',monospace;font-size:.5rem;padding:.1rem .4rem;border-radius:4px;background:var(--sf2);color:var(--dm);letter-spacing:.03em}
+.bg.live{background:rgba(0,255,136,.1);color:var(--grn);animation:pls 2s ease-in-out infinite}
+@keyframes pls{0%,100%{opacity:1}50%{opacity:.5}}
+.bt{font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--dm);display:flex;align-items:center;gap:.2rem}
+.bt-box{width:16px;height:9px;border:1px solid var(--dm);border-radius:2px;position:relative;overflow:hidden}
+.bt-box::after{content:'';position:absolute;right:-3px;top:2px;width:2px;height:3px;background:var(--dm);border-radius:0 1px 1px 0}
+.bt-fill{height:100%;border-radius:1px;transition:width .5s,background .5s}
+.mic-ind{font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--pnk);display:none;align-items:center;gap:.2rem}
+.mic-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pls 1.5s ease-in-out infinite}
+.mb{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0}
+.mo{flex:1;padding:.4rem .3rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.5rem;
+  letter-spacing:.03em;color:var(--dm);border-bottom:2px solid transparent;text-transform:uppercase;
+  touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,255,136,.1);user-select:none}
+.mo.active{color:var(--grn);border-bottom-color:var(--grn)}
+.mo .md{font-family:'DM Sans',sans-serif;font-size:.42rem;opacity:.6;margin-top:.05rem;text-transform:none;letter-spacing:0}
+.vt{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bd);border-bottom:1px solid var(--bd);flex-shrink:0}
+.vi{background:var(--sf);padding:.35rem .15rem;text-align:center}
+.vv{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;line-height:1}
+.vv.cr{color:var(--red)}.vv.cc{color:var(--cyn)}.vv.cg{color:var(--grn)}.vv.cp{color:var(--pur)}.vv.cb{color:var(--blu)}.vv.ck{color:var(--pnk)}
+.vl{font-size:.38rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dm);margin-top:.08rem}
+.tb{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0}
+.ta{flex:1;padding:.3rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.5rem;
+  letter-spacing:.04em;color:var(--dm);border-bottom:2px solid transparent;text-transform:uppercase;
+  touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,255,136,.1);user-select:none}
+.ta.active{color:var(--grn);border-bottom-color:var(--grn)}
+.ta.dis{opacity:.3}
+.cp{flex:1;position:relative;overflow:hidden;min-height:160px;display:none}
+.cp.vis{display:block}
+.cp canvas{width:100%;height:100%;display:block}
+.eg{background:linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,255,136,.015) 1px,transparent 1px);background-size:20px 20px}
+.co{position:absolute;right:6px;top:5px;display:flex;gap:5px}
+.ch{font-family:'JetBrains Mono',monospace;font-size:.45rem;padding:.1rem .3rem;border-radius:3px;
+  background:var(--sf2);border:1px solid var(--bd);color:var(--dm);touch-action:manipulation;user-select:none}
+.av{display:none;flex-shrink:0;padding:.5rem .8rem;background:rgba(247,182,51,.06);
+  border-top:1px solid rgba(245,158,11,.15);border-bottom:1px solid rgba(245,158,11,.15)}
+.av.show{display:block}
+.av-t{font-family:'JetBrains Mono',monospace;font-size:.55rem;font-weight:600;color:var(--amb);margin-bottom:.2rem}
+.av-m{font-size:.6rem;color:var(--tx);line-height:1.4}
+.av-m .fl{display:block;padding:.15rem 0;border-bottom:1px solid rgba(245,158,11,.05)}
+.av-m .fl:last-child{border:none}
+.av-m .fi{color:var(--amb);margin-right:.2rem}
+.av-f{margin-top:.3rem;padding-top:.2rem;border-top:1px solid rgba(245,158,11,.08);font-size:.45rem;color:var(--dm);font-style:italic;line-height:1.4}
+.av-d{margin-top:.25rem;font-family:'JetBrains Mono',monospace;font-size:.45rem;color:var(--dm);text-decoration:underline;touch-action:manipulation;user-select:none}
+.st{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bd);
+  border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);flex-shrink:0}
+.si{background:var(--sf);padding:.3rem .15rem;text-align:center}
+.sv{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:500}
+.sl{font-size:.38rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dm);margin-top:.06rem}
+.lo{flex:0 0 auto;max-height:55px;overflow-y:auto;padding:.25rem .6rem;
+  font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--dm);scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+.lo div{padding:.04rem 0}
+.lo .ok{color:var(--grn)}.lo .wn{color:var(--amb)}.lo .er{color:var(--red)}
+.ct{padding:.5rem .8rem;display:flex;gap:.4rem;flex-shrink:0}
+button{flex:1;font-family:'DM Sans',sans-serif;font-size:.7rem;font-weight:600;padding:.65rem;
+  border:none;border-radius:8px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
+button:active{transform:scale(.97)}
+.bg1{background:var(--grn);color:#000}
+.bg1:disabled{background:var(--sf2);color:var(--dm);cursor:default;transform:none}
+.bg2{background:var(--red);color:#fff}
+.bg2:disabled{background:var(--sf2);color:var(--dm);cursor:default;transform:none}
+.bg3{background:var(--sf2);color:var(--tx);border:1px solid var(--bd)}
+.bg3:disabled{color:var(--dm);cursor:default;transform:none}
+.ft{padding:.2rem .6rem;font-family:'JetBrains Mono',monospace;font-size:.42rem;color:var(--dm);
+  text-align:center;border-top:1px solid var(--bd);flex-shrink:0}
+@media(min-width:600px){.vv{font-size:1.4rem}.cp{min-height:260px}}
+</style>
+</head>
+<body>
+<div class="hd">
+  <h1><span>H10</span> CAPTURE <span class="v2">v2</span></h1>
+  <div class="hdr">
+    <div class="mic-ind" id="micInd"><div class="mic-dot"></div>MIC</div>
+    <div class="bt" id="battDisp" style="display:none">
+      <div class="bt-box"><div class="bt-fill" id="battFill" style="width:0%;background:var(--grn)"></div></div>
+      <span id="battPct">--%</span>
+    </div>
+    <div class="bg" id="badge">IDLE</div>
+  </div>
+</div>
+<div class="mb">
+  <div class="mo active" id="mFull">ECG+RR+HR<div class="md">Short sessions</div></div>
+  <div class="mo" id="mNight">RR+HR only<div class="md">Overnight</div></div>
+</div>
+<div class="vt">
+  <div class="vi"><div class="vv cr" id="vHR">--</div><div class="vl">HR bpm</div></div>
+  <div class="vi"><div class="vv cc" id="vRR">--</div><div class="vl">R-R ms</div></div>
+  <div class="vi"><div class="vv cg" id="vRMSSD">--</div><div class="vl">RMSSD</div></div>
+  <div class="vi"><div class="vv cp" id="vResp">--</div><div class="vl">Resp/min</div></div>
+  <div class="vi"><div class="vv cb" id="vQTc">--</div><div class="vl">QTc ms</div></div>
+  <div class="vi"><div class="vv ck" id="vdB">--</div><div class="vl">Sound dB</div></div>
+</div>
+<div class="tb">
+  <div class="ta active" id="tECG">ECG</div>
+  <div class="ta" id="tRR">R-R</div>
+  <div class="ta" id="tHR">HR</div>
+  <div class="ta" id="tRSP">Resp</div>
+  <div class="ta" id="tSND">Sound</div>
+</div>
+<div class="cp eg vis" id="pECG"><canvas id="cECG"></canvas>
+  <div class="co"><div class="ch" id="spdCh">25mm/s</div></div>
+</div>
+<div class="cp" id="pRR"><canvas id="cRR"></canvas></div>
+<div class="cp" id="pHR"><canvas id="cHR"></canvas></div>
+<div class="cp" id="pRSP"><canvas id="cRSP"></canvas></div>
+<div class="cp" id="pSND"><canvas id="cSND"></canvas></div>
+<div class="av" id="advisory">
+  <div class="av-t">&#9888; ADVISORY &#8212; PATTERNS DETECTED</div>
+  <div class="av-m" id="advMsg"></div>
+  <div class="av-f">This is not a medical device and cannot diagnose any condition. These patterns
+    may be completely normal. Consider mentioning them at your next GP appointment.</div>
+  <div class="av-d" id="advDis">Dismiss</div>
+</div>
+<div class="st">
+  <div class="si"><div class="sv" id="sMinHR">--</div><div class="sl">Min HR</div></div>
+  <div class="si"><div class="sv" id="sMaxHR">--</div><div class="sl">Max HR</div></div>
+  <div class="si"><div class="sv" id="sSDNN">--</div><div class="sl">SDNN</div></div>
+  <div class="si"><div class="sv" id="sBeats">0</div><div class="sl">Beats</div></div>
+  <div class="si"><div class="sv" id="sApnea">0</div><div class="sl">Apnea ep</div></div>
+  <div class="si"><div class="sv" id="sSnore">0</div><div class="sl">Snore ep</div></div>
+</div>
+<div class="lo" id="logArea"></div>
+<div class="ct">
+  <button class="bg1" id="btnGo">Connect</button>
+  <button class="bg2" id="btnStop" disabled>Stop</button>
+  <button class="bg3" id="btnExport" disabled>Export</button>
+</div>
+<div class="ft">Polar H10 v2 &#8212; ECG + EDR + Apnea + QTc + Snore Detection &#8212; not a medical device</div>
+
+<script>
+window.onerror=function(m,u,l){document.body.insertAdjacentHTML('afterbegin',
+  '<div style="background:#ef4444;color:#fff;padding:10px;font-family:monospace;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:9999">Error: '+m+' (line '+l+')</div>');};
+
+const PMD_SVC='fb005c80-02e7-f387-1cad-8acd2d8df0c8';
+const PMD_CTL='fb005c81-02e7-f387-1cad-8acd2d8df0c8';
+const PMD_DAT='fb005c82-02e7-f387-1cad-8acd2d8df0c8';
+const HR_SVC=0x180D,HR_CHR=0x2A37,BATT_SVC=0x180F,BATT_CHR=0x2A19;
+
+let device,server,pmdDat,pmdCtl,hrCh,battCh,wakeLock;
+let recording=false,startTime=null,ecgOn=false,mode='full';
+let autoReconnect=true,reconnecting=false,reconnectAttempts=0;
+const MAX_RECONNECT=10;
+
+const ecgAll=[],rrAll=[],hrAll=[];
+const ecgDraw=[],rrDraw=[],hrDraw=[],respDraw=[],sndDraw=[];
+const ECG_HZ=130;
+let ecgWin=8,ecgBuf=ECG_HZ*8,scrlSpd=25;
+const RR_MX=200,HR_MX=300,RSP_MX=120,SND_MX=600;
+
+let respRate=null;
+const respHistory=[],qtcHistory=[],qtcBuffer=[];
+const ecgQTWindow=[];
+let apneaEpisodes=0;
+const apneaLog=[];
+
+// Sound/snoring state
+let audioCtx=null,analyser=null,micStream=null;
+const soundAll=[];       // {time, db}
+const snoreLog=[];       // {start, end, duration_s, avg_db}
+let snoreState='quiet';  // 'quiet' or 'loud'
+let snoreLoudStart=null;
+let snoreLoudSamples=[];
+const SNORE_THRESHOLD_DB=15; // dB above ambient baseline
+let ambientBaseline=null;
+let ambientSamples=[];
+const AMBIENT_WINDOW=30; // seconds to establish baseline
+
+const an={pauses:0,ectopics:0,highHR:0,lowHR:0,irregEp:0,apneaEp:0,
+  lastIdx:0,shown:new Set(),dismissed:false};
+const ANOM_INT=60000;
+let lastAnomChk=0;
+let activeTab='ecg';
+let batteryLevel=null;
+const $=id=>document.getElementById(id);
+
+function log(m,c=''){const d=document.createElement('div');if(c)d.className=c;
+  d.textContent='['+new Date().toLocaleTimeString('en-GB')+'] '+m;
+  $('logArea').appendChild(d);$('logArea').scrollTop=$('logArea').scrollHeight}
+
+function setMode(m){
+  if(recording){log('Stop first','wn');return}
+  mode=m;$('mFull').classList.toggle('active',m==='full');
+  $('mNight').classList.toggle('active',m==='night');
+  $('tECG').classList.toggle('dis',m==='night');
+  if(m==='night'&&activeTab==='ecg')showTab('rr');
+  log(m==='full'?'Mode: ECG+RR+HR':'Mode: RR+HR overnight','ok');
+}
+
+function showTab(t){
+  if(t==='ecg'&&mode==='night')return;
+  activeTab=t;
+  ['ECG','RR','HR','RSP','SND'].forEach(id=>{
+    $('p'+id).classList.toggle('vis',id===t.toUpperCase());
+    $('t'+id).classList.toggle('active',id===t.toUpperCase());
+  });
+  drawActive();
+}
+
+function toggleSpeed(){
+  scrlSpd=scrlSpd===25?50:25;ecgWin=scrlSpd===25?8:4;
+  ecgBuf=ECG_HZ*ecgWin;$('spdCh').textContent=scrlSpd+'mm/s';
+  while(ecgDraw.length>ecgBuf)ecgDraw.shift();
+}
+
+async function getWL(){try{if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');
+  log('Wake lock on','ok');wakeLock.addEventListener('release',()=>{wakeLock=null})}}catch(e){log('No wake lock','wn')}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&recording&&!wakeLock)getWL()});
+
+// === Microphone / Sound Monitoring ===
+async function startMicrophone(){
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const source=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();
+    analyser.fftSize=2048;
+    analyser.smoothingTimeConstant=0.8;
+    source.connect(analyser);
+    // Do NOT connect to destination (no feedback)
+    $('micInd').style.display='flex';
+    log('Microphone active (anti-throttle + snore detection)','ok');
+    // Start sampling
+    sampleSound();
+  }catch(e){
+    log('Microphone denied: '+e.message,'wn');
+    log('Chrome may throttle in background','wn');
+  }
+}
+
+function sampleSound(){
+  if(!recording||!analyser)return;
+  const data=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+
+  // RMS of frequency bins -> approximate dB
+  let sum=0;
+  for(let i=0;i<data.length;i++)sum+=data[i]*data[i];
+  const rms=Math.sqrt(sum/data.length);
+  const db=rms>0?20*Math.log10(rms/255)*-1:0; // invert so louder=higher
+  const dbNorm=Math.max(0,Math.min(100,rms/255*100)); // 0-100 scale
+
+  const now=new Date();
+  soundAll.push({time:now,db:dbNorm});
+  sndDraw.push(dbNorm);
+  if(sndDraw.length>SND_MX)sndDraw.shift();
+  $('vdB').textContent=dbNorm.toFixed(0);
+
+  // Establish ambient baseline from first 30 seconds
+  if(ambientBaseline===null){
+    ambientSamples.push(dbNorm);
+    if(ambientSamples.length>=AMBIENT_WINDOW){
+      ambientBaseline=ambientSamples.reduce((a,b)=>a+b,0)/ambientSamples.length;
+      log('Ambient baseline: '+ambientBaseline.toFixed(1)+' dB','ok');
+    }
+  }
+
+  // Snore detection (after baseline established)
+  if(ambientBaseline!==null){
+    const aboveBaseline=dbNorm-ambientBaseline;
+    if(aboveBaseline>SNORE_THRESHOLD_DB){
+      if(snoreState==='quiet'){
+        snoreState='loud';
+        snoreLoudStart=now;
+        snoreLoudSamples=[];
+      }
+      snoreLoudSamples.push(dbNorm);
+    }else{
+      if(snoreState==='loud'){
+        // End of loud period
+        const durS=(now.getTime()-snoreLoudStart.getTime())/1000;
+        // Snoring: loud for at least 3 seconds
+        if(durS>=3){
+          const avgDb=snoreLoudSamples.reduce((a,b)=>a+b,0)/snoreLoudSamples.length;
+          snoreLog.push({
+            start:snoreLoudStart,
+            end:now,
+            duration_s:Math.round(durS),
+            avg_db:Math.round(avgDb)
+          });
+          $('sSnore').textContent=snoreLog.length;
+        }
+        snoreState='quiet';
+        snoreLoudStart=null;
+        snoreLoudSamples=[];
+      }
+    }
+  }
+
+  setTimeout(sampleSound,1000); // Sample every second
+}
+
+function stopMicrophone(){
+  if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}
+  if(audioCtx){audioCtx.close();audioCtx=null;analyser=null}
+  $('micInd').style.display='none';
+}
+
+// === Battery ===
+async function readBattery(){
+  try{const bs=await server.getPrimaryService(BATT_SVC);
+    battCh=await bs.getCharacteristic(BATT_CHR);
+    const v=await battCh.readValue();updateBattDisplay(v.getUint8(0));
+    await battCh.startNotifications();
+    battCh.addEventListener('characteristicvaluechanged',e=>{updateBattDisplay(e.target.value.getUint8(0))});
+    log('Battery monitoring active','ok');
+  }catch(e){log('Battery unavailable','wn')}
+}
+
+function updateBattDisplay(pct){
+  batteryLevel=pct;$('battDisp').style.display='flex';$('battPct').textContent=pct+'%';
+  const f=$('battFill');f.style.width=pct+'%';
+  f.style.background=pct>20?'var(--grn)':pct>10?'var(--amb)':'var(--red)';
+}
+
+// === Connect ===
+async function start(){
+  try{
+    log('Scanning...');
+    device=await navigator.bluetooth.requestDevice({
+      filters:[{namePrefix:'Polar'}],
+      optionalServices:[PMD_SVC,HR_SVC,BATT_SVC]
+    });
+    log('Found: '+device.name,'ok');
+    device.addEventListener('gattserverdisconnected',onDC);
+    await connectDevice();
+  }catch(e){
+    if(e.name==='NotFoundError')log('Cancelled','wn');
+    else log('Error: '+e.message,'er');
+  }
+}
+
+async function connectDevice(){
+  try{
+    server=await device.gatt.connect();log('Connected','ok');
+    try{const hs=await server.getPrimaryService(HR_SVC);
+      hrCh=await hs.getCharacteristic(HR_CHR);
+      await hrCh.startNotifications();
+      hrCh.addEventListener('characteristicvaluechanged',onHR);
+      log('HR + R-R active','ok');
+    }catch(e){log('HR: '+e.message,'wn')}
+    await readBattery();
+    ecgOn=false;
+    if(mode==='full'){
+      try{const ps=await server.getPrimaryService(PMD_SVC);
+        pmdCtl=await ps.getCharacteristic(PMD_CTL);
+        pmdDat=await ps.getCharacteristic(PMD_DAT);
+        await pmdDat.startNotifications();
+        pmdDat.addEventListener('characteristicvaluechanged',onECG);
+        await pmdCtl.writeValue(new Uint8Array([0x02,0x00,0x00,0x01,0x82,0x00,0x01,0x01,0x0E,0x00]));
+        ecgOn=true;log('ECG at 130 Hz','ok');
+      }catch(e){log('ECG unavailable','wn')}
+    }else{log('Overnight - ECG skipped','ok')}
+
+    if(!recording){
+      recording=true;startTime=new Date();
+      Object.assign(an,{pauses:0,ectopics:0,highHR:0,lowHR:0,irregEp:0,apneaEp:0,lastIdx:0,dismissed:false});
+      an.shown.clear();lastAnomChk=0;apneaEpisodes=0;apneaLog.length=0;snoreLog.length=0;
+      soundAll.length=0;ambientBaseline=null;ambientSamples=[];snoreState='quiet';
+      $('advisory').classList.remove('show');$('sSnore').textContent='0';$('sApnea').textContent='0';
+      // Start microphone for anti-throttle + snoring
+      await startMicrophone();
+    }
+
+    reconnecting=false;reconnectAttempts=0;
+    $('badge').textContent=ecgOn?'ECG+RR':'RR LIVE';
+    $('badge').className='bg live';
+    $('btnGo').disabled=true;$('btnStop').disabled=false;
+    await getWL();rafLoop();
+  }catch(e){
+    log('Connect failed: '+e.message,'er');
+    if(recording&&autoReconnect)scheduleReconnect();
+  }
+}
+
+function scheduleReconnect(){
+  if(!autoReconnect||reconnectAttempts>=MAX_RECONNECT||!recording)return;
+  reconnecting=true;reconnectAttempts++;
+  const delay=Math.min(2000*reconnectAttempts,15000);
+  log('Reconnecting in '+(delay/1000).toFixed(0)+'s ('+reconnectAttempts+'/'+MAX_RECONNECT+')...','wn');
+  $('badge').textContent='RECONNECTING';$('badge').className='bg';
+  setTimeout(async()=>{
+    if(!recording||!autoReconnect)return;
+    try{await connectDevice()}catch(e){log('Reconnect failed','er');scheduleReconnect()}
+  },delay);
+}
+
+function onDC(){
+  log('Disconnected','er');
+  if(recording&&autoReconnect&&!reconnecting){
+    log('Auto-reconnecting...','wn');scheduleReconnect();
+  }else if(!recording){
+    $('badge').textContent='DISCONNECTED';$('badge').className='bg';
+    $('btnGo').disabled=false;$('btnStop').disabled=true;
+    if(rrAll.length>0||ecgAll.length>0)$('btnExport').disabled=false;
+    if(wakeLock){wakeLock.release();wakeLock=null}
+    if(rrAll.length>30){an.dismissed=false;checkAnomalies()}
+  }
+}
+
+function onECG(ev){
+  const d=ev.target.value;if(d.byteLength<1||d.getUint8(0)!==0x00)return;
+  const now=performance.now();let off=10,idx=0;
+  while(off+2<d.byteLength){
+    let v=d.getUint8(off)|(d.getUint8(off+1)<<8)|(d.getUint8(off+2)<<16);
+    if(v&0x800000)v|=~0xFFFFFF;
+    ecgAll.push({t_ms:now+(idx/ECG_HZ)*1000,uv:v});
+    ecgDraw.push(v);if(ecgDraw.length>ecgBuf)ecgDraw.shift();
+    ecgQTWindow.push(v);if(ecgQTWindow.length>ECG_HZ*2)ecgQTWindow.shift();
+    off+=3;idx++;
+  }
+  if(ecgAll.length%650===0&&ecgQTWindow.length>=ECG_HZ*2)estimateQTc();
+}
+
+function onHR(ev){
+  const d=ev.target.value,flags=d.getUint8(0),now=new Date();
+  const hr16=flags&0x01;let hr,off;
+  if(hr16){hr=d.getUint16(1,true);off=3}else{hr=d.getUint8(1);off=2}
+  if(flags&0x08)off+=2;
+  hrAll.push({time:now,hr});hrDraw.push(hr);
+  if(hrDraw.length>HR_MX)hrDraw.shift();
+  $('vHR').textContent=hr;
+  if(flags&0x10){
+    while(off+1<d.byteLength){
+      const raw=d.getUint16(off,true);
+      const ms=Math.round((raw/1024)*1000*10)/10;
+      rrAll.push({time:now,rr:ms});rrDraw.push(ms);
+      if(rrDraw.length>RR_MX)rrDraw.shift();
+      $('vRR').textContent=ms.toFixed(0);off+=2;
+    }
+  }
+  updateStats();
+  const elapsed=Date.now()-(startTime?startTime.getTime():Date.now());
+  if(elapsed-lastAnomChk>ANOM_INT&&rrAll.length>30){lastAnomChk=elapsed;checkAnomalies()}
+  if(rrAll.length%30===0&&rrAll.length>=60)calcRespiration();
+  if(rrAll.length%120===0&&rrAll.length>=300)checkApnea();
+}
+
+function updateStats(){
+  if(hrAll.length>0){const hrs=hrAll.map(h=>h.hr);$('sMinHR').textContent=Math.min(...hrs);$('sMaxHR').textContent=Math.max(...hrs)}
+  if(rrAll.length>1){
+    const rrs=rrAll.map(r=>r.rr);const mean=rrs.reduce((a,b)=>a+b,0)/rrs.length;
+    const sdnn=Math.sqrt(rrs.reduce((s,r)=>s+(r-mean)**2,0)/rrs.length);
+    $('sSDNN').textContent=sdnn.toFixed(1);$('sBeats').textContent=rrs.length;
+    const rec=rrs.slice(-300);
+    if(rec.length>1){let sq=0;for(let i=1;i<rec.length;i++)sq+=(rec[i]-rec[i-1])**2;
+      $('vRMSSD').textContent=Math.sqrt(sq/(rec.length-1)).toFixed(0)}
+  }
+}
+
+function calcRespiration(){
+  const rrs=rrAll.slice(-120).map(r=>r.rr);if(rrs.length<60)return;
+  const times=[];let t=0;for(let i=0;i<rrs.length;i++){times.push(t);t+=rrs[i]/1000}
+  const fs=4;const dur=t;const n=Math.floor(dur*fs);const uniform=[];
+  for(let i=0;i<n;i++){const ti=i/fs;let j=0;while(j<times.length-1&&times[j+1]<ti)j++;
+    if(j>=times.length-1){uniform.push(rrs[rrs.length-1]);continue}
+    const frac=(ti-times[j])/(times[j+1]-times[j]);uniform.push(rrs[j]+(rrs[j+1]-rrs[j])*frac)}
+  if(uniform.length<32)return;
+  const mean=uniform.reduce((a,b)=>a+b,0)/uniform.length;
+  const centered=uniform.map(v=>v-mean);
+  const windowed=centered.map((v,i)=>v*0.5*(1-Math.cos(2*Math.PI*i/(centered.length-1))));
+  const N=windowed.length;const freqMin=0.15,freqMax=0.4;
+  const binMin=Math.floor(freqMin*N/fs),binMax=Math.ceil(freqMax*N/fs);
+  let maxMag=0,maxBin=binMin;
+  for(let k=binMin;k<=binMax&&k<N/2;k++){let re=0,im=0;
+    for(let n2=0;n2<N;n2++){const angle=-2*Math.PI*k*n2/N;re+=windowed[n2]*Math.cos(angle);im+=windowed[n2]*Math.sin(angle)}
+    const m=Math.sqrt(re*re+im*im);if(m>maxMag){maxMag=m;maxBin=k}}
+  const peakFreq=maxBin*fs/N;respRate=peakFreq*60;
+  if(respRate>=6&&respRate<=30){
+    $('vResp').textContent=respRate.toFixed(1);
+    respHistory.push({time:new Date(),rate:respRate});
+    respDraw.push(respRate);if(respDraw.length>RSP_MX)respDraw.shift()}
+}
+
+function estimateQTc(){
+  if(ecgQTWindow.length<ECG_HZ*1.5||rrAll.length<2)return;
+  const sig=ecgQTWindow.slice();const N=sig.length;
+  let maxVal=-Infinity,maxIdx=0;
+  for(let i=Math.floor(N*0.1);i<Math.floor(N*0.5);i++){if(sig[i]>maxVal){maxVal=sig[i];maxIdx=i}}
+  const baseline=sig.reduce((a,b)=>a+b,0)/N;
+  if(maxVal<baseline+200)return;
+  const searchStart=maxIdx+Math.floor(0.15*ECG_HZ);
+  const searchEnd=Math.min(maxIdx+Math.floor(0.45*ECG_HZ),N-1);if(searchEnd>=N)return;
+  let tPeak=searchStart,tPeakVal=0;
+  for(let i=searchStart;i<=searchEnd;i++){const v=Math.abs(sig[i]-baseline);if(v>tPeakVal){tPeakVal=v;tPeak=i}}
+  let tEnd=tPeak;
+  for(let i=tPeak;i<Math.min(tPeak+Math.floor(0.15*ECG_HZ),N);i++){
+    if(Math.abs(sig[i]-baseline)<Math.abs(sig[tPeak]-baseline)*0.3){tEnd=i;break}}
+  if(tEnd<=tPeak)tEnd=tPeak+Math.floor(0.05*ECG_HZ);
+  const qtMs=(tEnd-maxIdx)/ECG_HZ*1000;if(qtMs<200||qtMs>600)return;
+  const rrSec=rrAll[rrAll.length-1].rr/1000;if(rrSec<0.4||rrSec>2.0)return;
+  const qtc=qtMs/Math.sqrt(rrSec);if(qtc<300||qtc>600)return;
+  qtcHistory.push({time:new Date(),qtc:Math.round(qtc)});
+  qtcBuffer.push(qtc);if(qtcBuffer.length>60)qtcBuffer.shift();
+  $('vQTc').textContent=Math.round(qtc);
+  if(qtcBuffer.length>5){$('sQTcAvg')||void 0}
+}
+
+function checkApnea(){
+  if(rrAll.length<300)return;
+  const window2=rrAll.slice(-300);const hrs=window2.map(r=>60000/r.rr);
+  const smooth=[];for(let i=2;i<hrs.length-2;i++)smooth.push((hrs[i-2]+hrs[i-1]+hrs[i]+hrs[i+1]+hrs[i+2])/5);
+  if(smooth.length<100)return;
+  const times2=[];let t2=0;for(let i=2;i<window2.length-2;i++){t2+=window2[i].rr/1000;times2.push(t2)}
+  let cycles=0,state='neutral',localMin=Infinity,localMax=-Infinity,cycleStart=0;
+  const threshold=5;
+  for(let i=1;i<smooth.length;i++){
+    if(smooth[i]<localMin)localMin=smooth[i];if(smooth[i]>localMax)localMax=smooth[i];
+    if(state==='neutral'){if(smooth[i]<smooth[i-1]-1){state='falling';localMin=smooth[i];cycleStart=times2[i]}
+      else if(smooth[i]>smooth[i-1]+1){state='rising';localMax=smooth[i]}}
+    else if(state==='falling'){if(smooth[i]<localMin)localMin=smooth[i];
+      if(smooth[i]>localMin+threshold){state='rising';localMax=smooth[i]}}
+    else if(state==='rising'){if(smooth[i]>localMax)localMax=smooth[i];
+      if(smooth[i]<localMax-threshold){const swing=localMax-localMin;const duration=times2[i]-cycleStart;
+        if(duration>=20&&duration<=90&&swing>=8)cycles++;
+        state='falling';localMin=smooth[i];localMax=-Infinity;cycleStart=times2[i]}}}
+  if(cycles>=3){apneaLog.push({time:new Date(),cycles:cycles,window:'5min'});$('sApnea').textContent=apneaLog.length;an.apneaEp=apneaLog.length}
+}
+
+function checkAnomalies(){
+  const si=an.lastIdx;const rrs=rrAll.map(r=>r.rr);if(rrs.length<10)return;
+  const newRR=rrs.slice(si);an.lastIdx=rrs.length;
+  for(const rr of newRR){if(rr>2000)an.pauses++}
+  for(let i=si+1;i<rrs.length-1;i++){const ls=Math.max(0,i-10);const loc=rrs.slice(ls,i);
+    if(loc.length<5)continue;const lm=loc.reduce((a,b)=>a+b,0)/loc.length;
+    if(rrs[i]<lm*0.75&&rrs[i+1]>lm*1.15)an.ectopics++}
+  let hc=0;for(let i=si;i<hrAll.length;i++){if(hrAll[i].hr>120){hc++;if(hc>=30){an.highHR++;hc=0}}else hc=0}
+  let lc=0;for(let i=si;i<hrAll.length;i++){if(hrAll[i].hr<40){lc++;if(lc>=10){an.lowHR++;lc=0}}else lc=0}
+  if(newRR.length>=30){for(let w=0;w<=newRR.length-30;w+=30){
+    const win=newRR.slice(w,w+30);const mn=win.reduce((a,b)=>a+b,0)/win.length;
+    const sd=Math.sqrt(win.reduce((s,r)=>s+(r-mn)**2,0)/win.length);const cv=sd/mn;let nn50=0;
+    for(let j=1;j<win.length;j++){if(Math.abs(win[j]-win[j-1])>50)nn50++}
+    if(cv>0.18&&nn50/(win.length-1)>0.5)an.irregEp++}}
+  if(qtcBuffer.length>10){const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
+    if(avg>470&&!an.shown.has('qtc'))an.shown.add('qtc')}
+  showAdvisory();
+}
+
+function showAdvisory(){
+  if(an.dismissed)return;const flags=[];
+  if(an.pauses>=3&&!an.shown.has('pause'))flags.push({key:'pause',text:an.pauses+' pauses >2s detected. May be worth discussing with GP.'});
+  if(an.ectopics>=10&&!an.shown.has('ectopic'))flags.push({key:'ectopic',text:an.ectopics+' possible ectopic beats. Usually harmless but worth noting.'});
+  if(an.highHR>=1&&!an.shown.has('tachy'))flags.push({key:'tachy',text:'Sustained HR above 120 bpm at rest detected.'});
+  if(an.lowHR>=1&&!an.shown.has('brady'))flags.push({key:'brady',text:'Sustained HR below 40 bpm detected.'});
+  if(an.irregEp>=3&&!an.shown.has('irreg'))flags.push({key:'irreg',text:an.irregEp+' irregular rhythm epochs detected.'});
+  if(apneaLog.length>=2&&!an.shown.has('apnea'))flags.push({key:'apnea',text:apneaLog.length+' episodes of cyclic HR variation (possible sleep-disordered breathing).'});
+  if(an.shown.has('qtc')&&!an.shown.has('qtc_flag')){const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
+    flags.push({key:'qtc_flag',text:'Average QTc '+Math.round(avg)+' ms exceeds 470ms threshold. Discuss with treatment team.'})}
+  if(snoreLog.length>=5&&!an.shown.has('snore'))flags.push({key:'snore',text:snoreLog.length+' snoring episodes detected. Combined with HR patterns, may indicate sleep-disordered breathing.'});
+  if(flags.length===0)return;
+  flags.forEach(f=>an.shown.add(f.key));
+  $('advMsg').innerHTML=flags.map(f=>'<span class="fl"><span class="fi">&#9654;</span>'+f.text+'</span>').join('');
+  $('advisory').classList.add('show');log('Advisory: '+flags.length+' pattern(s)','wn');
+}
+
+function dismissAdvisory(){$('advisory').classList.remove('show');an.dismissed=true}
+
+// === Drawing ===
+let rafId;
+function rafLoop(){drawActive();if(recording)rafId=requestAnimationFrame(rafLoop)}
+function drawActive(){
+  if(activeTab==='ecg'&&mode==='full')drawECG();
+  else if(activeTab==='rr')drawRR();
+  else if(activeTab==='hr')drawHRc();
+  else if(activeTab==='rsp')drawResp();
+  else if(activeTab==='snd')drawSound();
+}
+
+function prep(cv){const cx=cv.getContext('2d');const dpr=window.devicePixelRatio||1;
+  const r=cv.getBoundingClientRect();cv.width=r.width*dpr;cv.height=r.height*dpr;
+  cx.scale(dpr,dpr);return[cx,r.width,r.height]}
+
+function drawECG(){
+  const[c,W,H]=prep($('cECG'));c.clearRect(0,0,W,H);drawGrid(c,W,H);
+  const by=H*.6;c.strokeStyle='rgba(0,255,136,.06)';c.lineWidth=.5;
+  c.beginPath();c.moveTo(0,by);c.lineTo(W,by);c.stroke();
+  if(ecgDraw.length<2)return;const uPx=5,step=W/ecgBuf;
+  c.beginPath();c.strokeStyle='rgba(0,255,136,.08)';c.lineWidth=6;c.lineJoin='round';
+  for(let i=0;i<ecgDraw.length;i++){const x=i*step,y=by-ecgDraw[i]/uPx;i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+  c.beginPath();c.strokeStyle='#00ff88';c.lineWidth=1.5;c.lineJoin='round';
+  for(let i=0;i<ecgDraw.length;i++){const x=i*step,y=by-ecgDraw[i]/uPx;i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+  const lx=(ecgDraw.length-1)*step,ly=by-ecgDraw[ecgDraw.length-1]/uPx;
+  c.beginPath();c.arc(lx,ly,3,0,Math.PI*2);c.fillStyle='#00ff88';c.fill();
+  const cx2=W-25,ch2=1000/uPx;c.strokeStyle='rgba(0,255,136,.25)';c.lineWidth=2;
+  c.beginPath();c.moveTo(cx2,by);c.lineTo(cx2,by-ch2);c.stroke();
+  c.font='8px JetBrains Mono';c.fillStyle='rgba(0,255,136,.25)';c.fillText('1mV',cx2-20,by-ch2/2+3);
+}
+
+function drawRR(){const[c,W,H]=prep($('cRR'));c.clearRect(0,0,W,H);
+  if(rrDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Waiting for R-R...',W/2-60,H/2);return}
+  drawTrace(c,W,H,rrDraw,RR_MX,30,'#22d3ee','rgba(34,211,238,.1)')}
+
+function drawHRc(){const[c,W,H]=prep($('cHR'));c.clearRect(0,0,W,H);
+  if(hrDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Waiting for HR...',W/2-55,H/2);return}
+  drawTrace(c,W,H,hrDraw,HR_MX,5,'#ef4444','rgba(239,68,68,.1)')}
+
+function drawResp(){const[c,W,H]=prep($('cRSP'));c.clearRect(0,0,W,H);
+  if(respDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Resp calculating...',W/2-65,H/2);return}
+  drawTrace(c,W,H,respDraw,RSP_MX,2,'#a78bfa','rgba(167,139,250,.1)');
+  const mn=Math.min(...respDraw)-2,mx=Math.max(...respDraw)+2,range=mx-mn||1;const pad=25;
+  const y12=pad/2+(1-(12-mn)/range)*(H-pad);const y20=pad/2+(1-(20-mn)/range)*(H-pad);
+  const[c2]=prep($('cRSP'));
+  c2.fillStyle='rgba(167,139,250,.04)';c2.fillRect(pad,Math.min(y12,y20),W-pad,Math.abs(y20-y12))}
+
+function drawSound(){
+  const[c,W,H]=prep($('cSND'));c.clearRect(0,0,W,H);
+  if(sndDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Listening...',W/2-40,H/2);return}
+  // Draw as bar-style for sound levels
+  const pad=25;const step=(W-pad)/SND_MX;const off=SND_MX-sndDraw.length;
+
+  // Ambient baseline line
+  if(ambientBaseline!==null){
+    const bY=pad/2+(1-ambientBaseline/100)*(H-pad);
+    c.strokeStyle='rgba(100,116,139,.4)';c.lineWidth=1;c.setLineDash([4,4]);
+    c.beginPath();c.moveTo(pad,bY);c.lineTo(W,bY);c.stroke();c.setLineDash([]);
+    // Snore threshold
+    const tY=pad/2+(1-(ambientBaseline+SNORE_THRESHOLD_DB)/100)*(H-pad);
+    c.strokeStyle='rgba(244,114,182,.3)';c.lineWidth=1;c.setLineDash([4,4]);
+    c.beginPath();c.moveTo(pad,tY);c.lineTo(W,tY);c.stroke();c.setLineDash([]);
+    c.font='8px JetBrains Mono';c.fillStyle='rgba(244,114,182,.4)';c.fillText('snore threshold',W-85,tY-4);
+  }
+
+  // Y labels
+  c.font='9px JetBrains Mono';c.fillStyle='rgba(74,85,104,.4)';
+  for(let i=0;i<=4;i++){const y=pad/2+(i/4)*(H-pad);const v=100-(i/4)*100;
+    c.fillText(v.toFixed(0),2,y+3);c.strokeStyle='rgba(30,41,59,.4)';c.lineWidth=.5;
+    c.beginPath();c.moveTo(pad,y);c.lineTo(W,y);c.stroke()}
+
+  // Sound trace
+  c.beginPath();c.strokeStyle='rgba(244,114,182,.15)';c.lineWidth=4;c.lineJoin='round';
+  for(let i=0;i<sndDraw.length;i++){const x=(i+off)*step+pad;const y=pad/2+(1-sndDraw[i]/100)*(H-pad);
+    i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+  c.beginPath();c.strokeStyle='#f472b6';c.lineWidth=1.5;c.lineJoin='round';
+  for(let i=0;i<sndDraw.length;i++){const x=(i+off)*step+pad;const y=pad/2+(1-sndDraw[i]/100)*(H-pad);
+    i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+}
+
+function drawTrace(c,W,H,data,maxPts,margin,color,glow){
+  const pad=25;const mn=Math.min(...data)-margin,mx=Math.max(...data)+margin,range=mx-mn||1;
+  const step=(W-pad)/(maxPts-1),off=maxPts-data.length;
+  c.font='9px JetBrains Mono';c.fillStyle='rgba(74,85,104,.4)';
+  for(let i=0;i<=4;i++){const y=pad/2+(i/4)*(H-pad);c.fillText((mx-(i/4)*range).toFixed(0),2,y+3);
+    c.strokeStyle='rgba(30,41,59,.4)';c.lineWidth=.5;c.beginPath();c.moveTo(pad,y);c.lineTo(W,y);c.stroke()}
+  c.beginPath();c.strokeStyle=glow;c.lineWidth=5;c.lineJoin='round';
+  for(let i=0;i<data.length;i++){const x=(i+off)*step+pad,y=pad/2+(1-(data[i]-mn)/range)*(H-pad);i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+  c.beginPath();c.strokeStyle=color;c.lineWidth=1.5;c.lineJoin='round';
+  for(let i=0;i<data.length;i++){const x=(i+off)*step+pad,y=pad/2+(1-(data[i]-mn)/range)*(H-pad);i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+}
+
+function drawGrid(c,W,H){
+  c.strokeStyle='rgba(0,255,136,.02)';c.lineWidth=.5;
+  for(let x=0;x<W;x+=20){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}
+  for(let y=0;y<H;y+=20){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
+  c.strokeStyle='rgba(0,255,136,.05)';
+  for(let x=0;x<W;x+=100){c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke()}
+  for(let y=0;y<H;y+=100){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
+}
+
+setInterval(()=>{if(recording&&startTime){
+  const el=Math.floor((Date.now()-startTime.getTime())/1000);
+  const h=Math.floor(el/3600),m=String(Math.floor((el%3600)/60)).padStart(2,'0'),
+    s=String(el%60).padStart(2,'0');
+  $('vTime')||void 0;
+  // Update duration in vitals - find the duration element
+  const durEl=document.querySelectorAll('.vv')[5];
+  if(durEl)durEl.textContent=h>0?h+':'+m+':'+s:m+':'+s;
+}},1000);
+
+setInterval(async()=>{if(recording&&battCh){try{const v=await battCh.readValue();updateBattDisplay(v.getUint8(0))}catch(e){}}},300000);
+
+async function stop(){
+  autoReconnect=false;recording=false;
+  try{
+    if(ecgOn&&pmdCtl)await pmdCtl.writeValue(new Uint8Array([0x03,0x00]));
+    if(pmdDat)await pmdDat.stopNotifications();
+    if(hrCh)await hrCh.stopNotifications();
+    if(battCh)await battCh.stopNotifications();
+    if(device&&device.gatt.connected)device.gatt.disconnect();
+  }catch(e){log('Stop: '+e.message,'wn')}
+  stopMicrophone();
+  $('badge').textContent='STOPPED';$('badge').className='bg';
+  $('btnGo').disabled=false;$('btnStop').disabled=true;
+  if(rrAll.length>0||ecgAll.length>0)$('btnExport').disabled=false;
+  if(wakeLock){wakeLock.release();wakeLock=null}
+  if(rrAll.length>30){an.dismissed=false;checkAnomalies()}
+  autoReconnect=true;
+  const p=[];if(ecgAll.length)p.push(ecgAll.length+' ECG');
+  if(rrAll.length)p.push(rrAll.length+' RR');if(hrAll.length)p.push(hrAll.length+' HR');
+  if(respHistory.length)p.push(respHistory.length+' resp');
+  if(soundAll.length)p.push(soundAll.length+' sound');
+  if(snoreLog.length)p.push(snoreLog.length+' snore episodes');
+  log('Stopped: '+p.join(', '),'ok');
+}
+
+function exportAll(){
+  const ds=startTime.toISOString().slice(0,10);
+  const ts=startTime.toTimeString().slice(0,5).replace(':','');
+  let fc=0;
+
+  if(ecgAll.length>0){const t0=ecgAll[0].t_ms;let csv='elapsed_s,ecg_uv\n';
+    for(const s of ecgAll)csv+=((s.t_ms-t0)/1000).toFixed(6)+','+s.uv+'\n';
+    dl('h10_ecg_'+ds+'_'+ts+'.csv',csv);fc++}
+
+  if(rrAll.length>0){let csv='timestamp,elapsed_s,rr_interval_ms\n';const t0=startTime.getTime();
+    for(const r of rrAll)csv+=r.time.toISOString()+','+((r.time.getTime()-t0)/1000).toFixed(3)+','+r.rr+'\n';
+    setTimeout(()=>dl('h10_rr_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+
+  if(hrAll.length>0){let csv='timestamp,elapsed_s,heart_rate_bpm\n';const t0=startTime.getTime();
+    for(const h of hrAll)csv+=h.time.toISOString()+','+((h.time.getTime()-t0)/1000).toFixed(3)+','+h.hr+'\n';
+    setTimeout(()=>dl('h10_hr_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+
+  if(respHistory.length>0){let csv='timestamp,resp_rate_brpm\n';
+    for(const r of respHistory)csv+=r.time.toISOString()+','+r.rate.toFixed(1)+'\n';
+    setTimeout(()=>dl('h10_resp_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+
+  if(qtcHistory.length>0){let csv='timestamp,qtc_ms\n';
+    for(const q of qtcHistory)csv+=q.time.toISOString()+','+q.qtc+'\n';
+    setTimeout(()=>dl('h10_qtc_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+
+  if(soundAll.length>0){let csv='timestamp,sound_level\n';
+    for(const s of soundAll)csv+=s.time.toISOString()+','+s.db.toFixed(1)+'\n';
+    setTimeout(()=>dl('h10_sound_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+
+  // Summary
+  let sum='H10 Capture v2 Summary\n'+'='.repeat(40)+'\n';
+  sum+='Date: '+ds+'\nStart: '+startTime.toLocaleTimeString('en-GB')+'\n';
+  const durEl=document.querySelectorAll('.vv')[5];
+  sum+='Duration: '+(durEl?durEl.textContent:'--')+'\n';
+  sum+='Mode: '+(mode==='full'?'ECG+RR+HR':'RR+HR overnight')+'\n';
+  if(batteryLevel!==null)sum+='Battery: '+batteryLevel+'%\n';
+  sum+='\n';
+
+  if(ecgAll.length)sum+='ECG: '+ecgAll.length+' samples at '+ECG_HZ+' Hz\n\n';
+  if(hrAll.length){const hrs=hrAll.map(h=>h.hr);
+    sum+='Heart Rate ('+hrs.length+' readings):\n';
+    sum+='  Min: '+Math.min(...hrs)+' bpm\n  Max: '+Math.max(...hrs)+' bpm\n';
+    sum+='  Mean: '+(hrs.reduce((a,b)=>a+b,0)/hrs.length).toFixed(1)+' bpm\n\n'}
+  if(rrAll.length>1){const rrs=rrAll.map(r=>r.rr);const mean=rrs.reduce((a,b)=>a+b,0)/rrs.length;
+    const sdnn=Math.sqrt(rrs.reduce((s,r)=>s+(r-mean)**2,0)/rrs.length);
+    let sq=0;for(let i=1;i<rrs.length;i++)sq+=(rrs[i]-rrs[i-1])**2;const rmssd=Math.sqrt(sq/(rrs.length-1));
+    sum+='R-R Intervals ('+rrs.length+' beats):\n';
+    sum+='  Min: '+Math.min(...rrs).toFixed(1)+' ms\n  Max: '+Math.max(...rrs).toFixed(1)+' ms\n';
+    sum+='  Mean: '+mean.toFixed(1)+' ms\n  SDNN: '+sdnn.toFixed(1)+' ms\n  RMSSD: '+rmssd.toFixed(1)+' ms\n\n'}
+  if(respHistory.length>0){const rates=respHistory.map(r=>r.rate);
+    sum+='Respiration (EDR, '+respHistory.length+' estimates):\n';
+    sum+='  Min: '+Math.min(...rates).toFixed(1)+' br/min\n  Max: '+Math.max(...rates).toFixed(1)+' br/min\n';
+    sum+='  Mean: '+(rates.reduce((a,b)=>a+b,0)/rates.length).toFixed(1)+' br/min\n\n'}
+  if(qtcHistory.length>0){const qtcs=qtcHistory.map(q=>q.qtc);
+    sum+='QTc Interval (Bazett, '+qtcHistory.length+' estimates):\n';
+    sum+='  Min: '+Math.min(...qtcs)+' ms\n  Max: '+Math.max(...qtcs)+' ms\n';
+    sum+='  Mean: '+Math.round(qtcs.reduce((a,b)=>a+b,0)/qtcs.length)+' ms\n\n'}
+
+  sum+='Sound Monitoring\n'+'-'.repeat(30)+'\n';
+  sum+='Samples: '+soundAll.length+' (1/second)\n';
+  if(ambientBaseline!==null)sum+='Ambient baseline: '+ambientBaseline.toFixed(1)+'\n';
+  sum+='Snore threshold: '+SNORE_THRESHOLD_DB+' above ambient\n';
+  sum+='Snoring episodes (>3s): '+snoreLog.length+'\n';
+  if(snoreLog.length>0){
+    let totalSnoreS=0;
+    for(const s of snoreLog){
+      sum+='  '+s.start.toLocaleTimeString('en-GB')+' - '+s.end.toLocaleTimeString('en-GB');
+      sum+=' ('+s.duration_s+'s, avg '+s.avg_db+')\n';
+      totalSnoreS+=s.duration_s;
+    }
+    sum+='Total snoring time: '+Math.round(totalSnoreS/60)+' min\n';
+  }
+  sum+='\n';
+
+  sum+='Pattern Detection Report\n'+'-'.repeat(30)+'\n';
+  sum+='Long pauses (>2s): '+an.pauses+'\n';
+  sum+='Possible ectopic beats: '+an.ectopics+'\n';
+  sum+='Sustained high HR (>120): '+an.highHR+'\n';
+  sum+='Sustained low HR (<40): '+an.lowHR+'\n';
+  sum+='Irregular rhythm epochs: '+an.irregEp+'\n';
+  sum+='Apnea-like episodes: '+apneaLog.length+'\n';
+  if(apneaLog.length>0)for(const a of apneaLog)sum+='  '+a.time.toLocaleTimeString('en-GB')+': '+a.cycles+' cycles in '+a.window+'\n';
+  sum+='\nNOTE: This is not a medical device. All metrics are approximate\nand cannot diagnose any condition. Discuss concerns with your GP.\n';
+
+  setTimeout(()=>dl('h10_summary_'+ds+'_'+ts+'.txt',sum),300*fc);
+  log('Exported '+(fc+1)+' files','ok');
+}
+
+function dl(n,c){const b=new Blob([c],{type:'text/csv'});const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download=n;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
+
+window.addEventListener('resize',drawActive);
+
+function tap(el,fn){let touched=false;
+  el.addEventListener('touchend',function(e){e.preventDefault();touched=true;fn();
+    setTimeout(()=>{touched=false},300)},{passive:false});
+  el.addEventListener('click',function(){if(!touched)fn()})}
+
+try{
+  tap($('mFull'),()=>setMode('full'));
+  tap($('mNight'),()=>setMode('night'));
+  tap($('tECG'),()=>showTab('ecg'));
+  tap($('tRR'),()=>showTab('rr'));
+  tap($('tHR'),()=>showTab('hr'));
+  tap($('tRSP'),()=>showTab('rsp'));
+  tap($('tSND'),()=>showTab('snd'));
+  tap($('spdCh'),toggleSpeed);
+  tap($('advDis'),dismissAdvisory);
+  tap($('btnGo'),start);
+  tap($('btnStop'),stop);
+  tap($('btnExport'),exportAll);
+  log('v2 loaded - mic + snore detection ready','ok');
+}catch(e){
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div style="background:#ef4444;color:#fff;padding:10px;font-family:monospace;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:9999">Init: '+e.message+'</div>');
+}
+</script>
+</body>
+</html>
