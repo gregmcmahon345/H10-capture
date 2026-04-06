@@ -3,18 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>H10 Capture v2</title>
+<title>H10 Capture v3</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050809;--sf:#0c1117;--sf2:#141c27;--bd:#1a2332;--tx:#e2e8f0;--dm:#4a5568;
-  --grn:#00ff88;--red:#ef4444;--amb:#f59e0b;--cyn:#22d3ee;--pur:#a78bfa;--blu:#3b82f6;--pnk:#f472b6}
+  --grn:#00ff88;--red:#ef4444;--amb:#f59e0b;--cyn:#22d3ee;--pur:#a78bfa;--blu:#3b82f6}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
   min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;
   overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .hd{padding:.5rem .8rem;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .hd h1{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:500;letter-spacing:.05em;color:var(--dm)}
-.hd h1 span{color:var(--grn)}.hd h1 .v2{color:var(--pur)}
+.hd h1 span{color:var(--grn)}
 .hdr{display:flex;align-items:center;gap:.5rem}
 .bg{font-family:'JetBrains Mono',monospace;font-size:.5rem;padding:.1rem .4rem;border-radius:4px;background:var(--sf2);color:var(--dm);letter-spacing:.03em}
 .bg.live{background:rgba(0,255,136,.1);color:var(--grn);animation:pls 2s ease-in-out infinite}
@@ -23,8 +23,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
 .bt-box{width:16px;height:9px;border:1px solid var(--dm);border-radius:2px;position:relative;overflow:hidden}
 .bt-box::after{content:'';position:absolute;right:-3px;top:2px;width:2px;height:3px;background:var(--dm);border-radius:0 1px 1px 0}
 .bt-fill{height:100%;border-radius:1px;transition:width .5s,background .5s}
-.mic-ind{font-family:'JetBrains Mono',monospace;font-size:.5rem;color:var(--pnk);display:none;align-items:center;gap:.2rem}
-.mic-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pls 1.5s ease-in-out infinite}
 .mb{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0}
 .mo{flex:1;padding:.4rem .3rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.5rem;
   letter-spacing:.03em;color:var(--dm);border-bottom:2px solid transparent;text-transform:uppercase;
@@ -34,7 +32,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
 .vt{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bd);border-bottom:1px solid var(--bd);flex-shrink:0}
 .vi{background:var(--sf);padding:.35rem .15rem;text-align:center}
 .vv{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;line-height:1}
-.vv.cr{color:var(--red)}.vv.cc{color:var(--cyn)}.vv.cg{color:var(--grn)}.vv.cp{color:var(--pur)}.vv.cb{color:var(--blu)}.vv.ck{color:var(--pnk)}
+.vv.cr{color:var(--red)}.vv.cc{color:var(--cyn)}.vv.cg{color:var(--grn)}.vv.cp{color:var(--pur)}.vv.cb{color:var(--blu)}
 .vl{font-size:.38rem;text-transform:uppercase;letter-spacing:.04em;color:var(--dm);margin-top:.08rem}
 .tb{display:flex;border-bottom:1px solid var(--bd);flex-shrink:0}
 .ta{flex:1;padding:.3rem;text-align:center;font-family:'JetBrains Mono',monospace;font-size:.5rem;
@@ -42,7 +40,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
   touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,255,136,.1);user-select:none}
 .ta.active{color:var(--grn);border-bottom-color:var(--grn)}
 .ta.dis{opacity:.3}
-.cp{flex:1;position:relative;overflow:hidden;min-height:160px;display:none}
+.cp{flex:1;position:relative;overflow:hidden;min-height:165px;display:none}
 .cp.vis{display:block}
 .cp canvas{width:100%;height:100%;display:block}
 .eg{background:linear-gradient(rgba(0,255,136,.015) 1px,transparent 1px),
@@ -86,9 +84,8 @@ button:active{transform:scale(.97)}
 </head>
 <body>
 <div class="hd">
-  <h1><span>H10</span> CAPTURE <span class="v2">v2</span></h1>
+  <h1><span>H10</span> CAPTURE <span style="color:var(--pur)">v3</span></h1>
   <div class="hdr">
-    <div class="mic-ind" id="micInd"><div class="mic-dot"></div>MIC</div>
     <div class="bt" id="battDisp" style="display:none">
       <div class="bt-box"><div class="bt-fill" id="battFill" style="width:0%;background:var(--grn)"></div></div>
       <span id="battPct">--%</span>
@@ -96,105 +93,117 @@ button:active{transform:scale(.97)}
     <div class="bg" id="badge">IDLE</div>
   </div>
 </div>
+
 <div class="mb">
   <div class="mo active" id="mFull">ECG+RR+HR<div class="md">Short sessions</div></div>
   <div class="mo" id="mNight">RR+HR only<div class="md">Overnight</div></div>
 </div>
+
 <div class="vt">
   <div class="vi"><div class="vv cr" id="vHR">--</div><div class="vl">HR bpm</div></div>
   <div class="vi"><div class="vv cc" id="vRR">--</div><div class="vl">R-R ms</div></div>
   <div class="vi"><div class="vv cg" id="vRMSSD">--</div><div class="vl">RMSSD</div></div>
   <div class="vi"><div class="vv cp" id="vResp">--</div><div class="vl">Resp/min</div></div>
   <div class="vi"><div class="vv cb" id="vQTc">--</div><div class="vl">QTc ms</div></div>
-  <div class="vi"><div class="vv ck" id="vdB">--</div><div class="vl">Sound dB</div></div>
+  <div class="vi"><div class="vv" id="vTime">00:00</div><div class="vl">Duration</div></div>
 </div>
+
 <div class="tb">
   <div class="ta active" id="tECG">ECG</div>
   <div class="ta" id="tRR">R-R</div>
   <div class="ta" id="tHR">HR</div>
   <div class="ta" id="tRSP">Resp</div>
-  <div class="ta" id="tSND">Sound</div>
 </div>
+
 <div class="cp eg vis" id="pECG"><canvas id="cECG"></canvas>
   <div class="co"><div class="ch" id="spdCh">25mm/s</div></div>
 </div>
 <div class="cp" id="pRR"><canvas id="cRR"></canvas></div>
 <div class="cp" id="pHR"><canvas id="cHR"></canvas></div>
 <div class="cp" id="pRSP"><canvas id="cRSP"></canvas></div>
-<div class="cp" id="pSND"><canvas id="cSND"></canvas></div>
+
 <div class="av" id="advisory">
-  <div class="av-t">&#9888; ADVISORY &#8212; PATTERNS DETECTED</div>
+  <div class="av-t">⚠ ADVISORY — PATTERNS DETECTED</div>
   <div class="av-m" id="advMsg"></div>
   <div class="av-f">This is not a medical device and cannot diagnose any condition. These patterns
-    may be completely normal. Consider mentioning them at your next GP appointment.</div>
+    may be completely normal — many factors affect heart rhythm including fitness level,
+    medication, caffeine, sleep position, and strap contact. Consider mentioning them
+    at your next GP appointment.</div>
   <div class="av-d" id="advDis">Dismiss</div>
 </div>
+
 <div class="st">
   <div class="si"><div class="sv" id="sMinHR">--</div><div class="sl">Min HR</div></div>
   <div class="si"><div class="sv" id="sMaxHR">--</div><div class="sl">Max HR</div></div>
   <div class="si"><div class="sv" id="sSDNN">--</div><div class="sl">SDNN</div></div>
   <div class="si"><div class="sv" id="sBeats">0</div><div class="sl">Beats</div></div>
   <div class="si"><div class="sv" id="sApnea">0</div><div class="sl">Apnea ep</div></div>
-  <div class="si"><div class="sv" id="sSnore">0</div><div class="sl">Snore ep</div></div>
+  <div class="si"><div class="sv" id="sQTcAvg">--</div><div class="sl">Avg QTc</div></div>
 </div>
+
 <div class="lo" id="logArea"></div>
+
 <div class="ct">
   <button class="bg1" id="btnGo">Connect</button>
   <button class="bg2" id="btnStop" disabled>Stop</button>
   <button class="bg3" id="btnExport" disabled>Export</button>
 </div>
-<div class="ft">Polar H10 v2 &#8212; ECG + EDR + Apnea + QTc + Snore Detection &#8212; not a medical device</div>
+
+<div class="ft">Polar H10 v3 — ECG 130Hz + EDR Respiration + Apnea Detection + QTc — not a medical device</div>
 
 <script>
+// === Error display ===
 window.onerror=function(m,u,l){document.body.insertAdjacentHTML('afterbegin',
   '<div style="background:#ef4444;color:#fff;padding:10px;font-family:monospace;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:9999">Error: '+m+' (line '+l+')</div>');};
 
+// === BLE UUIDs ===
 const PMD_SVC='fb005c80-02e7-f387-1cad-8acd2d8df0c8';
 const PMD_CTL='fb005c81-02e7-f387-1cad-8acd2d8df0c8';
 const PMD_DAT='fb005c82-02e7-f387-1cad-8acd2d8df0c8';
-const HR_SVC=0x180D,HR_CHR=0x2A37,BATT_SVC=0x180F,BATT_CHR=0x2A19;
+const HR_SVC=0x180D,HR_CHR=0x2A37;
+const BATT_SVC=0x180F,BATT_CHR=0x2A19;
 
+// === State ===
 let device,server,pmdDat,pmdCtl,hrCh,battCh,wakeLock;
 let recording=false,startTime=null,ecgOn=false,mode='full';
 let autoReconnect=true,reconnecting=false,reconnectAttempts=0;
 const MAX_RECONNECT=10;
 
+// Data stores
 const ecgAll=[],rrAll=[],hrAll=[];
-const ecgDraw=[],rrDraw=[],hrDraw=[],respDraw=[],sndDraw=[];
+const ecgDraw=[],rrDraw=[],hrDraw=[],respDraw=[];
 const ECG_HZ=130;
 let ecgWin=8,ecgBuf=ECG_HZ*8,scrlSpd=25;
-const RR_MX=200,HR_MX=300,RSP_MX=120,SND_MX=600;
+const RR_MX=200,HR_MX=300,RSP_MX=120;
 
+// Derived metrics
 let respRate=null;
-const respHistory=[],qtcHistory=[],qtcBuffer=[];
-const ecgQTWindow=[];
+const respHistory=[];   // {time, rate}
+const qtcHistory=[];    // {time, qtc_ms}
 let apneaEpisodes=0;
-const apneaLog=[];
+const apneaLog=[];      // {startTime, duration, minHR, maxHR}
 
-// Sound/snoring state
-let audioCtx=null,analyser=null,micStream=null;
-const soundAll=[];       // {time, db}
-const snoreLog=[];       // {start, end, duration_s, avg_db}
-let snoreState='quiet';  // 'quiet' or 'loud'
-let snoreLoudStart=null;
-let snoreLoudSamples=[];
-const SNORE_THRESHOLD_DB=15; // dB above ambient baseline
-let ambientBaseline=null;
-let ambientSamples=[];
-const AMBIENT_WINDOW=30; // seconds to establish baseline
-
+// Anomaly state
 const an={pauses:0,ectopics:0,highHR:0,lowHR:0,irregEp:0,apneaEp:0,
   lastIdx:0,shown:new Set(),dismissed:false};
 const ANOM_INT=60000;
 let lastAnomChk=0;
+
+// ECG QT detection state
+const qtcBuffer=[];     // recent QTc values
+const ecgQTWindow=[];   // ECG samples for QT analysis
+
 let activeTab='ecg';
 let batteryLevel=null;
+
 const $=id=>document.getElementById(id);
 
+// === Logging ===
 function log(m,c=''){const d=document.createElement('div');if(c)d.className=c;
-  d.textContent='['+new Date().toLocaleTimeString('en-GB')+'] '+m;
+  d.textContent=`[${new Date().toLocaleTimeString('en-GB')}] ${m}`;
   $('logArea').appendChild(d);$('logArea').scrollTop=$('logArea').scrollHeight}
 
+// === Mode ===
 function setMode(m){
   if(recording){log('Stop first','wn');return}
   mode=m;$('mFull').classList.toggle('active',m==='full');
@@ -204,130 +213,50 @@ function setMode(m){
   log(m==='full'?'Mode: ECG+RR+HR':'Mode: RR+HR overnight','ok');
 }
 
+// === Tabs ===
 function showTab(t){
   if(t==='ecg'&&mode==='night')return;
   activeTab=t;
-  ['ECG','RR','HR','RSP','SND'].forEach(id=>{
+  ['ECG','RR','HR','RSP'].forEach(id=>{
     $('p'+id).classList.toggle('vis',id===t.toUpperCase());
     $('t'+id).classList.toggle('active',id===t.toUpperCase());
   });
   drawActive();
 }
 
+// === Speed ===
 function toggleSpeed(){
   scrlSpd=scrlSpd===25?50:25;ecgWin=scrlSpd===25?8:4;
   ecgBuf=ECG_HZ*ecgWin;$('spdCh').textContent=scrlSpd+'mm/s';
   while(ecgDraw.length>ecgBuf)ecgDraw.shift();
 }
 
+// === Wake Lock ===
 async function getWL(){try{if('wakeLock' in navigator){wakeLock=await navigator.wakeLock.request('screen');
   log('Wake lock on','ok');wakeLock.addEventListener('release',()=>{wakeLock=null})}}catch(e){log('No wake lock','wn')}}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&recording&&!wakeLock)getWL()});
 
-// === Microphone / Sound Monitoring ===
-async function startMicrophone(){
-  try{
-    micStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-    const source=audioCtx.createMediaStreamSource(micStream);
-    analyser=audioCtx.createAnalyser();
-    analyser.fftSize=2048;
-    analyser.smoothingTimeConstant=0.8;
-    source.connect(analyser);
-    // Do NOT connect to destination (no feedback)
-    $('micInd').style.display='flex';
-    log('Microphone active (anti-throttle + snore detection)','ok');
-    // Start sampling
-    sampleSound();
-  }catch(e){
-    log('Microphone denied: '+e.message,'wn');
-    log('Chrome may throttle in background','wn');
-  }
-}
-
-function sampleSound(){
-  if(!recording||!analyser)return;
-  const data=new Uint8Array(analyser.frequencyBinCount);
-  analyser.getByteFrequencyData(data);
-
-  // RMS of frequency bins -> approximate dB
-  let sum=0;
-  for(let i=0;i<data.length;i++)sum+=data[i]*data[i];
-  const rms=Math.sqrt(sum/data.length);
-  const db=rms>0?20*Math.log10(rms/255)*-1:0; // invert so louder=higher
-  const dbNorm=Math.max(0,Math.min(100,rms/255*100)); // 0-100 scale
-
-  const now=new Date();
-  soundAll.push({time:now,db:dbNorm});
-  sndDraw.push(dbNorm);
-  if(sndDraw.length>SND_MX)sndDraw.shift();
-  $('vdB').textContent=dbNorm.toFixed(0);
-
-  // Establish ambient baseline from first 30 seconds
-  if(ambientBaseline===null){
-    ambientSamples.push(dbNorm);
-    if(ambientSamples.length>=AMBIENT_WINDOW){
-      ambientBaseline=ambientSamples.reduce((a,b)=>a+b,0)/ambientSamples.length;
-      log('Ambient baseline: '+ambientBaseline.toFixed(1)+' dB','ok');
-    }
-  }
-
-  // Snore detection (after baseline established)
-  if(ambientBaseline!==null){
-    const aboveBaseline=dbNorm-ambientBaseline;
-    if(aboveBaseline>SNORE_THRESHOLD_DB){
-      if(snoreState==='quiet'){
-        snoreState='loud';
-        snoreLoudStart=now;
-        snoreLoudSamples=[];
-      }
-      snoreLoudSamples.push(dbNorm);
-    }else{
-      if(snoreState==='loud'){
-        // End of loud period
-        const durS=(now.getTime()-snoreLoudStart.getTime())/1000;
-        // Snoring: loud for at least 3 seconds
-        if(durS>=3){
-          const avgDb=snoreLoudSamples.reduce((a,b)=>a+b,0)/snoreLoudSamples.length;
-          snoreLog.push({
-            start:snoreLoudStart,
-            end:now,
-            duration_s:Math.round(durS),
-            avg_db:Math.round(avgDb)
-          });
-          $('sSnore').textContent=snoreLog.length;
-        }
-        snoreState='quiet';
-        snoreLoudStart=null;
-        snoreLoudSamples=[];
-      }
-    }
-  }
-
-  setTimeout(sampleSound,1000); // Sample every second
-}
-
-function stopMicrophone(){
-  if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}
-  if(audioCtx){audioCtx.close();audioCtx=null;analyser=null}
-  $('micInd').style.display='none';
-}
-
 // === Battery ===
 async function readBattery(){
-  try{const bs=await server.getPrimaryService(BATT_SVC);
+  try{
+    const bs=await server.getPrimaryService(BATT_SVC);
     battCh=await bs.getCharacteristic(BATT_CHR);
-    const v=await battCh.readValue();updateBattDisplay(v.getUint8(0));
+    const v=await battCh.readValue();
+    updateBattDisplay(v.getUint8(0));
+    // Listen for changes
     await battCh.startNotifications();
     battCh.addEventListener('characteristicvaluechanged',e=>{updateBattDisplay(e.target.value.getUint8(0))});
     log('Battery monitoring active','ok');
-  }catch(e){log('Battery unavailable','wn')}
+  }catch(e){log('Battery service unavailable','wn')}
 }
 
 function updateBattDisplay(pct){
-  batteryLevel=pct;$('battDisp').style.display='flex';$('battPct').textContent=pct+'%';
-  const f=$('battFill');f.style.width=pct+'%';
-  f.style.background=pct>20?'var(--grn)':pct>10?'var(--amb)':'var(--red)';
+  batteryLevel=pct;
+  $('battDisp').style.display='flex';
+  $('battPct').textContent=pct+'%';
+  const fill=$('battFill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct>20?'var(--grn)':pct>10?'var(--amb)':'var(--red)';
 }
 
 // === Connect ===
@@ -338,7 +267,7 @@ async function start(){
       filters:[{namePrefix:'Polar'}],
       optionalServices:[PMD_SVC,HR_SVC,BATT_SVC]
     });
-    log('Found: '+device.name,'ok');
+    log(`Found: ${device.name}`,'ok');
     device.addEventListener('gattserverdisconnected',onDC);
     await connectDevice();
   }catch(e){
@@ -349,14 +278,21 @@ async function start(){
 
 async function connectDevice(){
   try{
-    server=await device.gatt.connect();log('Connected','ok');
+    server=await device.gatt.connect();
+    log('Connected','ok');
+
+    // HR
     try{const hs=await server.getPrimaryService(HR_SVC);
       hrCh=await hs.getCharacteristic(HR_CHR);
       await hrCh.startNotifications();
       hrCh.addEventListener('characteristicvaluechanged',onHR);
       log('HR + R-R active','ok');
     }catch(e){log('HR: '+e.message,'wn')}
+
+    // Battery
     await readBattery();
+
+    // ECG
     ecgOn=false;
     if(mode==='full'){
       try{const ps=await server.getPrimaryService(PMD_SVC);
@@ -366,17 +302,16 @@ async function connectDevice(){
         pmdDat.addEventListener('characteristicvaluechanged',onECG);
         await pmdCtl.writeValue(new Uint8Array([0x02,0x00,0x00,0x01,0x82,0x00,0x01,0x01,0x0E,0x00]));
         ecgOn=true;log('ECG at 130 Hz','ok');
-      }catch(e){log('ECG unavailable','wn')}
-    }else{log('Overnight - ECG skipped','ok')}
+      }catch(e){log('ECG unavailable: '+e.message,'wn')}
+    }else{log('Overnight — ECG skipped','ok')}
 
     if(!recording){
       recording=true;startTime=new Date();
       Object.assign(an,{pauses:0,ectopics:0,highHR:0,lowHR:0,irregEp:0,apneaEp:0,lastIdx:0,dismissed:false});
-      an.shown.clear();lastAnomChk=0;apneaEpisodes=0;apneaLog.length=0;snoreLog.length=0;
-      soundAll.length=0;ambientBaseline=null;ambientSamples=[];snoreState='quiet';
-      $('advisory').classList.remove('show');$('sSnore').textContent='0';$('sApnea').textContent='0';
-      // Start microphone for anti-throttle + snoring
-      await startMicrophone();
+      an.shown.clear();lastAnomChk=0;apneaEpisodes=0;apneaLog.length=0;
+      $('advisory').classList.remove('show');
+      clearRecovery();// Discard any old emergency dump
+      const rb=document.getElementById('recoveryBanner');if(rb)rb.remove();
     }
 
     reconnecting=false;reconnectAttempts=0;
@@ -390,22 +325,25 @@ async function connectDevice(){
   }
 }
 
+// === Auto-reconnect ===
 function scheduleReconnect(){
   if(!autoReconnect||reconnectAttempts>=MAX_RECONNECT||!recording)return;
   reconnecting=true;reconnectAttempts++;
   const delay=Math.min(2000*reconnectAttempts,15000);
-  log('Reconnecting in '+(delay/1000).toFixed(0)+'s ('+reconnectAttempts+'/'+MAX_RECONNECT+')...','wn');
+  log(`Reconnecting in ${(delay/1000).toFixed(0)}s (attempt ${reconnectAttempts}/${MAX_RECONNECT})...`,'wn');
   $('badge').textContent='RECONNECTING';$('badge').className='bg';
   setTimeout(async()=>{
     if(!recording||!autoReconnect)return;
-    try{await connectDevice()}catch(e){log('Reconnect failed','er');scheduleReconnect()}
+    try{await connectDevice()}
+    catch(e){log('Reconnect failed','er');scheduleReconnect()}
   },delay);
 }
 
 function onDC(){
   log('Disconnected','er');
   if(recording&&autoReconnect&&!reconnecting){
-    log('Auto-reconnecting...','wn');scheduleReconnect();
+    log('Will attempt auto-reconnect...','wn');
+    scheduleReconnect();
   }else if(!recording){
     $('badge').textContent='DISCONNECTED';$('badge').className='bg';
     $('btnGo').disabled=false;$('btnStop').disabled=true;
@@ -415,6 +353,7 @@ function onDC(){
   }
 }
 
+// === Parse ECG ===
 function onECG(ev){
   const d=ev.target.value;if(d.byteLength<1||d.getUint8(0)!==0x00)return;
   const now=performance.now();let off=10,idx=0;
@@ -423,12 +362,15 @@ function onECG(ev){
     if(v&0x800000)v|=~0xFFFFFF;
     ecgAll.push({t_ms:now+(idx/ECG_HZ)*1000,uv:v});
     ecgDraw.push(v);if(ecgDraw.length>ecgBuf)ecgDraw.shift();
+    // QT window: keep last 2 seconds for analysis
     ecgQTWindow.push(v);if(ecgQTWindow.length>ECG_HZ*2)ecgQTWindow.shift();
     off+=3;idx++;
   }
-  if(ecgAll.length%650===0&&ecgQTWindow.length>=ECG_HZ*2)estimateQTc();
+  // QTc estimation every ~5 seconds
+  if(ecgAll.length%650===0&&ecgQTWindow.length>=ECG_HZ*2){estimateQTc()}
 }
 
+// === Parse HR + RR ===
 function onHR(ev){
   const d=ev.target.value,flags=d.getUint8(0),now=new Date();
   const hr16=flags&0x01;let hr,off;
@@ -437,137 +379,319 @@ function onHR(ev){
   hrAll.push({time:now,hr});hrDraw.push(hr);
   if(hrDraw.length>HR_MX)hrDraw.shift();
   $('vHR').textContent=hr;
+
   if(flags&0x10){
     while(off+1<d.byteLength){
       const raw=d.getUint16(off,true);
       const ms=Math.round((raw/1024)*1000*10)/10;
       rrAll.push({time:now,rr:ms});rrDraw.push(ms);
       if(rrDraw.length>RR_MX)rrDraw.shift();
-      $('vRR').textContent=ms.toFixed(0);off+=2;
+      $('vRR').textContent=ms.toFixed(0);
+      off+=2;
     }
   }
   updateStats();
+  // Periodic checks
   const elapsed=Date.now()-(startTime?startTime.getTime():Date.now());
   if(elapsed-lastAnomChk>ANOM_INT&&rrAll.length>30){lastAnomChk=elapsed;checkAnomalies()}
+  // Respiration every 30s
   if(rrAll.length%30===0&&rrAll.length>=60)calcRespiration();
+  // Apnea check every 2 min
   if(rrAll.length%120===0&&rrAll.length>=300)checkApnea();
 }
 
+// === Stats ===
 function updateStats(){
-  if(hrAll.length>0){const hrs=hrAll.map(h=>h.hr);$('sMinHR').textContent=Math.min(...hrs);$('sMaxHR').textContent=Math.max(...hrs)}
+  if(hrAll.length>0){
+    const hrs=hrAll.map(h=>h.hr);
+    $('sMinHR').textContent=Math.min(...hrs);
+    $('sMaxHR').textContent=Math.max(...hrs);
+  }
   if(rrAll.length>1){
-    const rrs=rrAll.map(r=>r.rr);const mean=rrs.reduce((a,b)=>a+b,0)/rrs.length;
+    const rrs=rrAll.map(r=>r.rr);
+    const mean=rrs.reduce((a,b)=>a+b,0)/rrs.length;
     const sdnn=Math.sqrt(rrs.reduce((s,r)=>s+(r-mean)**2,0)/rrs.length);
-    $('sSDNN').textContent=sdnn.toFixed(1);$('sBeats').textContent=rrs.length;
+    $('sSDNN').textContent=sdnn.toFixed(1);
+    $('sBeats').textContent=rrs.length;
     const rec=rrs.slice(-300);
     if(rec.length>1){let sq=0;for(let i=1;i<rec.length;i++)sq+=(rec[i]-rec[i-1])**2;
       $('vRMSSD').textContent=Math.sqrt(sq/(rec.length-1)).toFixed(0)}
   }
 }
 
+// ============================================
+// EDR — Respiration from R-R intervals
+// Uses respiratory sinus arrhythmia: R-R intervals
+// modulate at breathing frequency (0.15-0.4 Hz = 9-24 br/min)
+// ============================================
 function calcRespiration(){
-  const rrs=rrAll.slice(-120).map(r=>r.rr);if(rrs.length<60)return;
-  const times=[];let t=0;for(let i=0;i<rrs.length;i++){times.push(t);t+=rrs[i]/1000}
-  const fs=4;const dur=t;const n=Math.floor(dur*fs);const uniform=[];
-  for(let i=0;i<n;i++){const ti=i/fs;let j=0;while(j<times.length-1&&times[j+1]<ti)j++;
+  // Need at least 60 R-R intervals
+  const rrs=rrAll.slice(-120).map(r=>r.rr);
+  if(rrs.length<60)return;
+
+  // Interpolate to uniform 4 Hz
+  const times=[];let t=0;
+  for(let i=0;i<rrs.length;i++){times.push(t);t+=rrs[i]/1000}
+  const fs=4;const dur=t;
+  const n=Math.floor(dur*fs);
+  const uniform=[];
+  for(let i=0;i<n;i++){
+    const ti=i/fs;
+    // Find surrounding R-R intervals
+    let j=0;while(j<times.length-1&&times[j+1]<ti)j++;
     if(j>=times.length-1){uniform.push(rrs[rrs.length-1]);continue}
-    const frac=(ti-times[j])/(times[j+1]-times[j]);uniform.push(rrs[j]+(rrs[j+1]-rrs[j])*frac)}
+    const frac=(ti-times[j])/(times[j+1]-times[j]);
+    uniform.push(rrs[j]+(rrs[j+1]-rrs[j])*frac);
+  }
+
   if(uniform.length<32)return;
+
+  // Remove mean
   const mean=uniform.reduce((a,b)=>a+b,0)/uniform.length;
   const centered=uniform.map(v=>v-mean);
+
+  // Hanning window
   const windowed=centered.map((v,i)=>v*0.5*(1-Math.cos(2*Math.PI*i/(centered.length-1))));
-  const N=windowed.length;const freqMin=0.15,freqMax=0.4;
-  const binMin=Math.floor(freqMin*N/fs),binMax=Math.ceil(freqMax*N/fs);
+
+  // FFT via DFT (small enough at 4Hz for ~30s)
+  const N=windowed.length;
+  const mag=[];
+  const freqMin=0.15,freqMax=0.4;// 9-24 br/min
+  const binMin=Math.floor(freqMin*N/fs);
+  const binMax=Math.ceil(freqMax*N/fs);
+
   let maxMag=0,maxBin=binMin;
-  for(let k=binMin;k<=binMax&&k<N/2;k++){let re=0,im=0;
-    for(let n2=0;n2<N;n2++){const angle=-2*Math.PI*k*n2/N;re+=windowed[n2]*Math.cos(angle);im+=windowed[n2]*Math.sin(angle)}
-    const m=Math.sqrt(re*re+im*im);if(m>maxMag){maxMag=m;maxBin=k}}
-  const peakFreq=maxBin*fs/N;respRate=peakFreq*60;
+  for(let k=binMin;k<=binMax&&k<N/2;k++){
+    let re=0,im=0;
+    for(let n2=0;n2<N;n2++){
+      const angle=-2*Math.PI*k*n2/N;
+      re+=windowed[n2]*Math.cos(angle);
+      im+=windowed[n2]*Math.sin(angle);
+    }
+    const m=Math.sqrt(re*re+im*im);
+    if(m>maxMag){maxMag=m;maxBin=k}
+  }
+
+  const peakFreq=maxBin*fs/N;
+  respRate=peakFreq*60;// breaths per minute
+
   if(respRate>=6&&respRate<=30){
     $('vResp').textContent=respRate.toFixed(1);
     respHistory.push({time:new Date(),rate:respRate});
-    respDraw.push(respRate);if(respDraw.length>RSP_MX)respDraw.shift()}
+    respDraw.push(respRate);
+    if(respDraw.length>RSP_MX)respDraw.shift();
+  }
 }
 
+// ============================================
+// QTc Estimation from ECG waveform
+// Simplified: detect R-peaks and T-wave ends in 2s window
+// Bazett's: QTc = QT / sqrt(RR)
+// ============================================
 function estimateQTc(){
-  if(ecgQTWindow.length<ECG_HZ*1.5||rrAll.length<2)return;
-  const sig=ecgQTWindow.slice();const N=sig.length;
+  if(ecgQTWindow.length<ECG_HZ*1.5)return;
+  if(rrAll.length<2)return;
+
+  const sig=ecgQTWindow.slice();
+  const N=sig.length;
+
+  // Simple R-peak detection: find max positive value
   let maxVal=-Infinity,maxIdx=0;
-  for(let i=Math.floor(N*0.1);i<Math.floor(N*0.5);i++){if(sig[i]>maxVal){maxVal=sig[i];maxIdx=i}}
+  for(let i=Math.floor(N*0.1);i<Math.floor(N*0.5);i++){
+    if(sig[i]>maxVal){maxVal=sig[i];maxIdx=i}
+  }
+
+  // Find R-peak must be prominent
   const baseline=sig.reduce((a,b)=>a+b,0)/N;
-  if(maxVal<baseline+200)return;
+  if(maxVal<baseline+200)return;// No clear R-peak
+
+  // Estimate T-wave end: search 150-400ms after R-peak
   const searchStart=maxIdx+Math.floor(0.15*ECG_HZ);
-  const searchEnd=Math.min(maxIdx+Math.floor(0.45*ECG_HZ),N-1);if(searchEnd>=N)return;
+  const searchEnd=Math.min(maxIdx+Math.floor(0.45*ECG_HZ),N-1);
+  if(searchEnd>=N)return;
+
+  // Find T-wave peak (positive or negative bump after R)
   let tPeak=searchStart,tPeakVal=0;
-  for(let i=searchStart;i<=searchEnd;i++){const v=Math.abs(sig[i]-baseline);if(v>tPeakVal){tPeakVal=v;tPeak=i}}
+  for(let i=searchStart;i<=searchEnd;i++){
+    const v=Math.abs(sig[i]-baseline);
+    if(v>tPeakVal){tPeakVal=v;tPeak=i}
+  }
+
+  // T-wave end: where signal returns to baseline after T-peak
   let tEnd=tPeak;
   for(let i=tPeak;i<Math.min(tPeak+Math.floor(0.15*ECG_HZ),N);i++){
-    if(Math.abs(sig[i]-baseline)<Math.abs(sig[tPeak]-baseline)*0.3){tEnd=i;break}}
+    if(Math.abs(sig[i]-baseline)<Math.abs(sig[tPeak]-baseline)*0.3){tEnd=i;break}
+  }
   if(tEnd<=tPeak)tEnd=tPeak+Math.floor(0.05*ECG_HZ);
-  const qtMs=(tEnd-maxIdx)/ECG_HZ*1000;if(qtMs<200||qtMs>600)return;
-  const rrSec=rrAll[rrAll.length-1].rr/1000;if(rrSec<0.4||rrSec>2.0)return;
-  const qtc=qtMs/Math.sqrt(rrSec);if(qtc<300||qtc>600)return;
+
+  // QT interval in ms
+  const qtMs=(tEnd-maxIdx)/ECG_HZ*1000;
+  if(qtMs<200||qtMs>600)return;// Unrealistic
+
+  // Current R-R in seconds
+  const rrSec=rrAll[rrAll.length-1].rr/1000;
+  if(rrSec<0.4||rrSec>2.0)return;
+
+  // Bazett's correction
+  const qtc=qtMs/Math.sqrt(rrSec);
+  if(qtc<300||qtc>600)return;// Sanity check
+
   qtcHistory.push({time:new Date(),qtc:Math.round(qtc)});
   qtcBuffer.push(qtc);if(qtcBuffer.length>60)qtcBuffer.shift();
+
   $('vQTc').textContent=Math.round(qtc);
-  if(qtcBuffer.length>5){$('sQTcAvg')||void 0}
+
+  // Rolling average
+  if(qtcBuffer.length>5){
+    const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
+    $('sQTcAvg').textContent=Math.round(avg);
+  }
 }
 
+// ============================================
+// Sleep Apnea Detection
+// Looks for cyclic HR variation: repeated brady-tachy
+// patterns with period 30-90 seconds
+// ============================================
 function checkApnea(){
+  // Need at least 5 minutes of data
   if(rrAll.length<300)return;
-  const window2=rrAll.slice(-300);const hrs=window2.map(r=>60000/r.rr);
-  const smooth=[];for(let i=2;i<hrs.length-2;i++)smooth.push((hrs[i-2]+hrs[i-1]+hrs[i]+hrs[i+1]+hrs[i+2])/5);
+
+  // Take last 5 minutes of R-R data
+  const window=rrAll.slice(-300);
+  const hrs=window.map(r=>60000/r.rr);// Convert to instantaneous HR
+
+  // Smooth with 5-beat moving average
+  const smooth=[];
+  for(let i=2;i<hrs.length-2;i++){
+    smooth.push((hrs[i-2]+hrs[i-1]+hrs[i]+hrs[i+1]+hrs[i+2])/5);
+  }
+
   if(smooth.length<100)return;
-  const times2=[];let t2=0;for(let i=2;i<window2.length-2;i++){t2+=window2[i].rr/1000;times2.push(t2)}
-  let cycles=0,state='neutral',localMin=Infinity,localMax=-Infinity,cycleStart=0;
-  const threshold=5;
+
+  // Calculate times for each sample
+  const times2=[];let t2=0;
+  for(let i=2;i<window.length-2;i++){t2+=window[i].rr/1000;times2.push(t2)}
+
+  // Look for cyclical pattern: count significant peaks and troughs
+  // A cycle = HR drops then rises sharply
+  let cycles=0;
+  const threshold=5;// bpm swing
+  let state='neutral',localMin=Infinity,localMax=-Infinity;
+  let cycleStart=0;
+
   for(let i=1;i<smooth.length;i++){
-    if(smooth[i]<localMin)localMin=smooth[i];if(smooth[i]>localMax)localMax=smooth[i];
-    if(state==='neutral'){if(smooth[i]<smooth[i-1]-1){state='falling';localMin=smooth[i];cycleStart=times2[i]}
-      else if(smooth[i]>smooth[i-1]+1){state='rising';localMax=smooth[i]}}
-    else if(state==='falling'){if(smooth[i]<localMin)localMin=smooth[i];
-      if(smooth[i]>localMin+threshold){state='rising';localMax=smooth[i]}}
-    else if(state==='rising'){if(smooth[i]>localMax)localMax=smooth[i];
-      if(smooth[i]<localMax-threshold){const swing=localMax-localMin;const duration=times2[i]-cycleStart;
-        if(duration>=20&&duration<=90&&swing>=8)cycles++;
-        state='falling';localMin=smooth[i];localMax=-Infinity;cycleStart=times2[i]}}}
-  if(cycles>=3){apneaLog.push({time:new Date(),cycles:cycles,window:'5min'});$('sApnea').textContent=apneaLog.length;an.apneaEp=apneaLog.length}
+    if(smooth[i]<localMin)localMin=smooth[i];
+    if(smooth[i]>localMax)localMax=smooth[i];
+
+    if(state==='neutral'){
+      if(smooth[i]<smooth[i-1]-1){state='falling';localMin=smooth[i];cycleStart=times2[i]}
+      else if(smooth[i]>smooth[i-1]+1){state='rising';localMax=smooth[i]}
+    }else if(state==='falling'){
+      if(smooth[i]<localMin)localMin=smooth[i];
+      if(smooth[i]>localMin+threshold){
+        state='rising';localMax=smooth[i];
+      }
+    }else if(state==='rising'){
+      if(smooth[i]>localMax)localMax=smooth[i];
+      if(smooth[i]<localMax-threshold){
+        const swing=localMax-localMin;
+        const duration=times2[i]-cycleStart;
+        // Apnea-like cycle: 20-90 second period, >8 bpm swing
+        if(duration>=20&&duration<=90&&swing>=8){
+          cycles++;
+        }
+        state='falling';localMin=smooth[i];localMax=-Infinity;cycleStart=times2[i];
+      }
+    }
+  }
+
+  // 3+ cycles in 5 minutes suggests possible apnea pattern
+  if(cycles>=3){
+    const prevEp=apneaEpisodes;
+    apneaEpisodes=Math.max(apneaEpisodes,apneaLog.length+1);
+    apneaLog.push({
+      time:new Date(),
+      cycles:cycles,
+      window:'5min'
+    });
+    $('sApnea').textContent=apneaLog.length;
+    if(apneaLog.length>prevEp){
+      an.apneaEp=apneaLog.length;
+    }
+  }
 }
 
+// ============================================
+// Anomaly Detection (from v1 + apnea)
+// ============================================
 function checkAnomalies(){
-  const si=an.lastIdx;const rrs=rrAll.map(r=>r.rr);if(rrs.length<10)return;
+  const si=an.lastIdx;const rrs=rrAll.map(r=>r.rr);
+  if(rrs.length<10)return;
   const newRR=rrs.slice(si);an.lastIdx=rrs.length;
+
   for(const rr of newRR){if(rr>2000)an.pauses++}
-  for(let i=si+1;i<rrs.length-1;i++){const ls=Math.max(0,i-10);const loc=rrs.slice(ls,i);
-    if(loc.length<5)continue;const lm=loc.reduce((a,b)=>a+b,0)/loc.length;
-    if(rrs[i]<lm*0.75&&rrs[i+1]>lm*1.15)an.ectopics++}
-  let hc=0;for(let i=si;i<hrAll.length;i++){if(hrAll[i].hr>120){hc++;if(hc>=30){an.highHR++;hc=0}}else hc=0}
-  let lc=0;for(let i=si;i<hrAll.length;i++){if(hrAll[i].hr<40){lc++;if(lc>=10){an.lowHR++;lc=0}}else lc=0}
-  if(newRR.length>=30){for(let w=0;w<=newRR.length-30;w+=30){
-    const win=newRR.slice(w,w+30);const mn=win.reduce((a,b)=>a+b,0)/win.length;
-    const sd=Math.sqrt(win.reduce((s,r)=>s+(r-mn)**2,0)/win.length);const cv=sd/mn;let nn50=0;
-    for(let j=1;j<win.length;j++){if(Math.abs(win[j]-win[j-1])>50)nn50++}
-    if(cv>0.18&&nn50/(win.length-1)>0.5)an.irregEp++}}
-  if(qtcBuffer.length>10){const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
-    if(avg>470&&!an.shown.has('qtc'))an.shown.add('qtc')}
+
+  for(let i=si+1;i<rrs.length-1;i++){
+    const ls=Math.max(0,i-10);const loc=rrs.slice(ls,i);
+    if(loc.length<5)continue;
+    const lm=loc.reduce((a,b)=>a+b,0)/loc.length;
+    if(rrs[i]<lm*0.75&&rrs[i+1]>lm*1.15)an.ectopics++;
+  }
+
+  let hc=0;for(let i=si;i<hrAll.length;i++){
+    if(hrAll[i].hr>120){hc++;if(hc>=30){an.highHR++;hc=0}}else hc=0}
+  let lc=0;for(let i=si;i<hrAll.length;i++){
+    if(hrAll[i].hr<40){lc++;if(lc>=10){an.lowHR++;lc=0}}else lc=0}
+
+  if(newRR.length>=30){
+    for(let w=0;w<=newRR.length-30;w+=30){
+      const win=newRR.slice(w,w+30);
+      const mn=win.reduce((a,b)=>a+b,0)/win.length;
+      const sd=Math.sqrt(win.reduce((s,r)=>s+(r-mn)**2,0)/win.length);
+      const cv=sd/mn;let nn50=0;
+      for(let j=1;j<win.length;j++){if(Math.abs(win[j]-win[j-1])>50)nn50++}
+      if(cv>0.18&&nn50/(win.length-1)>0.5)an.irregEp++;
+    }
+  }
+
+  // QTc check: prolonged QTc > 470ms (male threshold)
+  if(qtcBuffer.length>10){
+    const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
+    if(avg>470&&!an.shown.has('qtc')){
+      an.shown.add('qtc');// Will be picked up in showAdvisory
+    }
+  }
+
   showAdvisory();
 }
 
 function showAdvisory(){
-  if(an.dismissed)return;const flags=[];
-  if(an.pauses>=3&&!an.shown.has('pause'))flags.push({key:'pause',text:an.pauses+' pauses >2s detected. May be worth discussing with GP.'});
-  if(an.ectopics>=10&&!an.shown.has('ectopic'))flags.push({key:'ectopic',text:an.ectopics+' possible ectopic beats. Usually harmless but worth noting.'});
-  if(an.highHR>=1&&!an.shown.has('tachy'))flags.push({key:'tachy',text:'Sustained HR above 120 bpm at rest detected.'});
-  if(an.lowHR>=1&&!an.shown.has('brady'))flags.push({key:'brady',text:'Sustained HR below 40 bpm detected.'});
-  if(an.irregEp>=3&&!an.shown.has('irreg'))flags.push({key:'irreg',text:an.irregEp+' irregular rhythm epochs detected.'});
-  if(apneaLog.length>=2&&!an.shown.has('apnea'))flags.push({key:'apnea',text:apneaLog.length+' episodes of cyclic HR variation (possible sleep-disordered breathing).'});
-  if(an.shown.has('qtc')&&!an.shown.has('qtc_flag')){const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
-    flags.push({key:'qtc_flag',text:'Average QTc '+Math.round(avg)+' ms exceeds 470ms threshold. Discuss with treatment team.'})}
-  if(snoreLog.length>=5&&!an.shown.has('snore'))flags.push({key:'snore',text:snoreLog.length+' snoring episodes detected. Combined with HR patterns, may indicate sleep-disordered breathing.'});
+  if(an.dismissed)return;
+  const flags=[];
+
+  if(an.pauses>=3&&!an.shown.has('pause'))
+    flags.push({key:'pause',text:`${an.pauses} pauses >2 seconds detected. Occasional pauses can occur during sleep, but frequent long pauses may be worth discussing with your GP.`});
+  if(an.ectopics>=10&&!an.shown.has('ectopic'))
+    flags.push({key:'ectopic',text:`${an.ectopics} possible ectopic beats detected. Occasional ectopics are common and usually harmless, but higher frequency is worth mentioning to your GP.`});
+  if(an.highHR>=1&&!an.shown.has('tachy'))
+    flags.push({key:'tachy',text:'Sustained HR above 120 bpm at rest. May reflect movement or other factors, but if unexpected, worth noting.'});
+  if(an.lowHR>=1&&!an.shown.has('brady'))
+    flags.push({key:'brady',text:'Sustained HR below 40 bpm detected. Can be normal in fit individuals, but worth discussing with GP if persistent.'});
+  if(an.irregEp>=3&&!an.shown.has('irreg'))
+    flags.push({key:'irreg',text:`${an.irregEp} irregular rhythm epochs detected. Many things cause rhythm variation including respiration. Consider mentioning if new or persistent.`});
+  if(apneaLog.length>=2&&!an.shown.has('apnea'))
+    flags.push({key:'apnea',text:`${apneaLog.length} episodes of cyclic heart rate variation detected (repeated bradycardia-tachycardia pattern). This can be associated with sleep-disordered breathing. Consider mentioning to your GP, especially if you are known to snore.`});
+  if(an.shown.has('qtc')&&!an.shown.has('qtc_flag')){
+    const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
+    flags.push({key:'qtc_flag',text:`Average QTc interval of ${Math.round(avg)} ms is above the 470 ms threshold for males. Prolonged QTc can be associated with certain medications including some ADT drugs. Worth discussing with your treatment team.`});
+  }
+
   if(flags.length===0)return;
   flags.forEach(f=>an.shown.add(f.key));
-  $('advMsg').innerHTML=flags.map(f=>'<span class="fl"><span class="fi">&#9654;</span>'+f.text+'</span>').join('');
-  $('advisory').classList.add('show');log('Advisory: '+flags.length+' pattern(s)','wn');
+  $('advMsg').innerHTML=flags.map(f=>`<span class="fl"><span class="fi">▸</span>${f.text}</span>`).join('');
+  $('advisory').classList.add('show');
+  log(`Advisory: ${flags.length} pattern(s) flagged`,'wn');
 }
 
 function dismissAdvisory(){$('advisory').classList.remove('show');an.dismissed=true}
@@ -580,7 +704,6 @@ function drawActive(){
   else if(activeTab==='rr')drawRR();
   else if(activeTab==='hr')drawHRc();
   else if(activeTab==='rsp')drawResp();
-  else if(activeTab==='snd')drawSound();
 }
 
 function prep(cv){const cx=cv.getContext('2d');const dpr=window.devicePixelRatio||1;
@@ -591,7 +714,8 @@ function drawECG(){
   const[c,W,H]=prep($('cECG'));c.clearRect(0,0,W,H);drawGrid(c,W,H);
   const by=H*.6;c.strokeStyle='rgba(0,255,136,.06)';c.lineWidth=.5;
   c.beginPath();c.moveTo(0,by);c.lineTo(W,by);c.stroke();
-  if(ecgDraw.length<2)return;const uPx=5,step=W/ecgBuf;
+  if(ecgDraw.length<2)return;
+  const uPx=5,step=W/ecgBuf;
   c.beginPath();c.strokeStyle='rgba(0,255,136,.08)';c.lineWidth=6;c.lineJoin='round';
   for(let i=0;i<ecgDraw.length;i++){const x=i*step,y=by-ecgDraw[i]/uPx;i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
   c.beginPath();c.strokeStyle='#00ff88';c.lineWidth=1.5;c.lineJoin='round';
@@ -603,53 +727,31 @@ function drawECG(){
   c.font='8px JetBrains Mono';c.fillStyle='rgba(0,255,136,.25)';c.fillText('1mV',cx2-20,by-ch2/2+3);
 }
 
-function drawRR(){const[c,W,H]=prep($('cRR'));c.clearRect(0,0,W,H);
+function drawRR(){
+  const[c,W,H]=prep($('cRR'));c.clearRect(0,0,W,H);
   if(rrDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Waiting for R-R...',W/2-60,H/2);return}
-  drawTrace(c,W,H,rrDraw,RR_MX,30,'#22d3ee','rgba(34,211,238,.1)')}
+  drawTrace(c,W,H,rrDraw,RR_MX,30,'#22d3ee','rgba(34,211,238,.1)');
+}
 
-function drawHRc(){const[c,W,H]=prep($('cHR'));c.clearRect(0,0,W,H);
+function drawHRc(){
+  const[c,W,H]=prep($('cHR'));c.clearRect(0,0,W,H);
   if(hrDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Waiting for HR...',W/2-55,H/2);return}
-  drawTrace(c,W,H,hrDraw,HR_MX,5,'#ef4444','rgba(239,68,68,.1)')}
+  drawTrace(c,W,H,hrDraw,HR_MX,5,'#ef4444','rgba(239,68,68,.1)');
+}
 
-function drawResp(){const[c,W,H]=prep($('cRSP'));c.clearRect(0,0,W,H);
-  if(respDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Resp calculating...',W/2-65,H/2);return}
+function drawResp(){
+  const[c,W,H]=prep($('cRSP'));c.clearRect(0,0,W,H);
+  if(respDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Resp rate calculating...',W/2-75,H/2);return}
   drawTrace(c,W,H,respDraw,RSP_MX,2,'#a78bfa','rgba(167,139,250,.1)');
-  const mn=Math.min(...respDraw)-2,mx=Math.max(...respDraw)+2,range=mx-mn||1;const pad=25;
-  const y12=pad/2+(1-(12-mn)/range)*(H-pad);const y20=pad/2+(1-(20-mn)/range)*(H-pad);
-  const[c2]=prep($('cRSP'));
-  c2.fillStyle='rgba(167,139,250,.04)';c2.fillRect(pad,Math.min(y12,y20),W-pad,Math.abs(y20-y12))}
-
-function drawSound(){
-  const[c,W,H]=prep($('cSND'));c.clearRect(0,0,W,H);
-  if(sndDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Listening...',W/2-40,H/2);return}
-  // Draw as bar-style for sound levels
-  const pad=25;const step=(W-pad)/SND_MX;const off=SND_MX-sndDraw.length;
-
-  // Ambient baseline line
-  if(ambientBaseline!==null){
-    const bY=pad/2+(1-ambientBaseline/100)*(H-pad);
-    c.strokeStyle='rgba(100,116,139,.4)';c.lineWidth=1;c.setLineDash([4,4]);
-    c.beginPath();c.moveTo(pad,bY);c.lineTo(W,bY);c.stroke();c.setLineDash([]);
-    // Snore threshold
-    const tY=pad/2+(1-(ambientBaseline+SNORE_THRESHOLD_DB)/100)*(H-pad);
-    c.strokeStyle='rgba(244,114,182,.3)';c.lineWidth=1;c.setLineDash([4,4]);
-    c.beginPath();c.moveTo(pad,tY);c.lineTo(W,tY);c.stroke();c.setLineDash([]);
-    c.font='8px JetBrains Mono';c.fillStyle='rgba(244,114,182,.4)';c.fillText('snore threshold',W-85,tY-4);
-  }
-
-  // Y labels
-  c.font='9px JetBrains Mono';c.fillStyle='rgba(74,85,104,.4)';
-  for(let i=0;i<=4;i++){const y=pad/2+(i/4)*(H-pad);const v=100-(i/4)*100;
-    c.fillText(v.toFixed(0),2,y+3);c.strokeStyle='rgba(30,41,59,.4)';c.lineWidth=.5;
-    c.beginPath();c.moveTo(pad,y);c.lineTo(W,y);c.stroke()}
-
-  // Sound trace
-  c.beginPath();c.strokeStyle='rgba(244,114,182,.15)';c.lineWidth=4;c.lineJoin='round';
-  for(let i=0;i<sndDraw.length;i++){const x=(i+off)*step+pad;const y=pad/2+(1-sndDraw[i]/100)*(H-pad);
-    i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
-  c.beginPath();c.strokeStyle='#f472b6';c.lineWidth=1.5;c.lineJoin='round';
-  for(let i=0;i<sndDraw.length;i++){const x=(i+off)*step+pad;const y=pad/2+(1-sndDraw[i]/100)*(H-pad);
-    i===0?c.moveTo(x,y):c.lineTo(x,y)}c.stroke();
+  // Reference band 12-20 br/min
+  const mn=Math.min(...respDraw)-2,mx=Math.max(...respDraw)+2,range=mx-mn||1;
+  const pad=25;
+  const y12=pad/2+(1-(12-mn)/range)*(H-pad);
+  const y20=pad/2+(1-(20-mn)/range)*(H-pad);
+  c.fillStyle='rgba(167,139,250,.04)';
+  c.fillRect(pad,Math.min(y12,y20),W-pad,Math.abs(y20-y12));
+  c.font='8px JetBrains Mono';c.fillStyle='rgba(167,139,250,.3)';
+  c.fillText('normal',W-40,Math.min(y12,y20)+10);
 }
 
 function drawTrace(c,W,H,data,maxPts,margin,color,glow){
@@ -673,18 +775,18 @@ function drawGrid(c,W,H){
   for(let y=0;y<H;y+=100){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
 }
 
+// === Timer ===
 setInterval(()=>{if(recording&&startTime){
   const el=Math.floor((Date.now()-startTime.getTime())/1000);
   const h=Math.floor(el/3600),m=String(Math.floor((el%3600)/60)).padStart(2,'0'),
     s=String(el%60).padStart(2,'0');
-  $('vTime')||void 0;
-  // Update duration in vitals - find the duration element
-  const durEl=document.querySelectorAll('.vv')[5];
-  if(durEl)durEl.textContent=h>0?h+':'+m+':'+s:m+':'+s;
-}},1000);
+  $('vTime').textContent=h>0?`${h}:${m}:${s}`:`${m}:${s}`}},1000);
 
-setInterval(async()=>{if(recording&&battCh){try{const v=await battCh.readValue();updateBattDisplay(v.getUint8(0))}catch(e){}}},300000);
+// Battery refresh every 5 minutes
+setInterval(async()=>{if(recording&&battCh){
+  try{const v=await battCh.readValue();updateBattDisplay(v.getUint8(0))}catch(e){}}},300000);
 
+// === Stop ===
 async function stop(){
   autoReconnect=false;recording=false;
   try{
@@ -694,119 +796,274 @@ async function stop(){
     if(battCh)await battCh.stopNotifications();
     if(device&&device.gatt.connected)device.gatt.disconnect();
   }catch(e){log('Stop: '+e.message,'wn')}
-  stopMicrophone();
   $('badge').textContent='STOPPED';$('badge').className='bg';
   $('btnGo').disabled=false;$('btnStop').disabled=true;
   if(rrAll.length>0||ecgAll.length>0)$('btnExport').disabled=false;
   if(wakeLock){wakeLock.release();wakeLock=null}
   if(rrAll.length>30){an.dismissed=false;checkAnomalies()}
-  autoReconnect=true;
-  const p=[];if(ecgAll.length)p.push(ecgAll.length+' ECG');
-  if(rrAll.length)p.push(rrAll.length+' RR');if(hrAll.length)p.push(hrAll.length+' HR');
-  if(respHistory.length)p.push(respHistory.length+' resp');
-  if(soundAll.length)p.push(soundAll.length+' sound');
-  if(snoreLog.length)p.push(snoreLog.length+' snore episodes');
-  log('Stopped: '+p.join(', '),'ok');
+  autoReconnect=true;// Reset for next session
+  const p=[];if(ecgAll.length)p.push(`${ecgAll.length} ECG`);
+  if(rrAll.length)p.push(`${rrAll.length} RR`);if(hrAll.length)p.push(`${hrAll.length} HR`);
+  if(respHistory.length)p.push(`${respHistory.length} resp`);
+  if(qtcHistory.length)p.push(`${qtcHistory.length} QTc`);
+  log(`Stopped: ${p.join(', ')}`,'ok');
 }
 
+// === Export ===
 function exportAll(){
   const ds=startTime.toISOString().slice(0,10);
   const ts=startTime.toTimeString().slice(0,5).replace(':','');
   let fc=0;
 
-  if(ecgAll.length>0){const t0=ecgAll[0].t_ms;let csv='elapsed_s,ecg_uv\n';
-    for(const s of ecgAll)csv+=((s.t_ms-t0)/1000).toFixed(6)+','+s.uv+'\n';
-    dl('h10_ecg_'+ds+'_'+ts+'.csv',csv);fc++}
+  if(ecgAll.length>0){
+    const t0=ecgAll[0].t_ms;let csv='elapsed_s,ecg_uv\n';
+    for(const s of ecgAll)csv+=`${((s.t_ms-t0)/1000).toFixed(6)},${s.uv}\n`;
+    dl(`h10_ecg_${ds}_${ts}.csv`,csv);fc++}
 
-  if(rrAll.length>0){let csv='timestamp,elapsed_s,rr_interval_ms\n';const t0=startTime.getTime();
-    for(const r of rrAll)csv+=r.time.toISOString()+','+((r.time.getTime()-t0)/1000).toFixed(3)+','+r.rr+'\n';
-    setTimeout(()=>dl('h10_rr_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+  if(rrAll.length>0){
+    let csv='timestamp,elapsed_s,rr_interval_ms\n';const t0=startTime.getTime();
+    for(const r of rrAll)csv+=`${r.time.toISOString()},${((r.time.getTime()-t0)/1000).toFixed(3)},${r.rr}\n`;
+    setTimeout(()=>dl(`h10_rr_${ds}_${ts}.csv`,csv),300*fc);fc++}
 
-  if(hrAll.length>0){let csv='timestamp,elapsed_s,heart_rate_bpm\n';const t0=startTime.getTime();
-    for(const h of hrAll)csv+=h.time.toISOString()+','+((h.time.getTime()-t0)/1000).toFixed(3)+','+h.hr+'\n';
-    setTimeout(()=>dl('h10_hr_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+  if(hrAll.length>0){
+    let csv='timestamp,elapsed_s,heart_rate_bpm\n';const t0=startTime.getTime();
+    for(const h of hrAll)csv+=`${h.time.toISOString()},${((h.time.getTime()-t0)/1000).toFixed(3)},${h.hr}\n`;
+    setTimeout(()=>dl(`h10_hr_${ds}_${ts}.csv`,csv),300*fc);fc++}
 
-  if(respHistory.length>0){let csv='timestamp,resp_rate_brpm\n';
-    for(const r of respHistory)csv+=r.time.toISOString()+','+r.rate.toFixed(1)+'\n';
-    setTimeout(()=>dl('h10_resp_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+  if(respHistory.length>0){
+    let csv='timestamp,resp_rate_brpm\n';
+    for(const r of respHistory)csv+=`${r.time.toISOString()},${r.rate.toFixed(1)}\n`;
+    setTimeout(()=>dl(`h10_resp_${ds}_${ts}.csv`,csv),300*fc);fc++}
 
-  if(qtcHistory.length>0){let csv='timestamp,qtc_ms\n';
-    for(const q of qtcHistory)csv+=q.time.toISOString()+','+q.qtc+'\n';
-    setTimeout(()=>dl('h10_qtc_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
-
-  if(soundAll.length>0){let csv='timestamp,sound_level\n';
-    for(const s of soundAll)csv+=s.time.toISOString()+','+s.db.toFixed(1)+'\n';
-    setTimeout(()=>dl('h10_sound_'+ds+'_'+ts+'.csv',csv),300*fc);fc++}
+  if(qtcHistory.length>0){
+    let csv='timestamp,qtc_ms\n';
+    for(const q of qtcHistory)csv+=`${q.time.toISOString()},${q.qtc}\n`;
+    setTimeout(()=>dl(`h10_qtc_${ds}_${ts}.csv`,csv),300*fc);fc++}
 
   // Summary
-  let sum='H10 Capture v2 Summary\n'+'='.repeat(40)+'\n';
-  sum+='Date: '+ds+'\nStart: '+startTime.toLocaleTimeString('en-GB')+'\n';
-  const durEl=document.querySelectorAll('.vv')[5];
-  sum+='Duration: '+(durEl?durEl.textContent:'--')+'\n';
-  sum+='Mode: '+(mode==='full'?'ECG+RR+HR':'RR+HR overnight')+'\n';
-  if(batteryLevel!==null)sum+='Battery: '+batteryLevel+'%\n';
+  let sum=`H10 Capture v3 Summary\n${'='.repeat(40)}\n`;
+  sum+=`Date: ${ds}\nStart: ${startTime.toLocaleTimeString('en-GB')}\n`;
+  sum+=`Duration: ${$('vTime').textContent}\nMode: ${mode==='full'?'ECG+RR+HR':'RR+HR overnight'}\n`;
+  if(batteryLevel!==null)sum+=`Battery: ${batteryLevel}%\n`;
   sum+='\n';
 
-  if(ecgAll.length)sum+='ECG: '+ecgAll.length+' samples at '+ECG_HZ+' Hz\n\n';
-  if(hrAll.length){const hrs=hrAll.map(h=>h.hr);
-    sum+='Heart Rate ('+hrs.length+' readings):\n';
-    sum+='  Min: '+Math.min(...hrs)+' bpm\n  Max: '+Math.max(...hrs)+' bpm\n';
-    sum+='  Mean: '+(hrs.reduce((a,b)=>a+b,0)/hrs.length).toFixed(1)+' bpm\n\n'}
-  if(rrAll.length>1){const rrs=rrAll.map(r=>r.rr);const mean=rrs.reduce((a,b)=>a+b,0)/rrs.length;
+  if(ecgAll.length)sum+=`ECG: ${ecgAll.length} samples at ${ECG_HZ} Hz\n\n`;
+
+  if(hrAll.length){
+    const hrs=hrAll.map(h=>h.hr);
+    sum+=`Heart Rate (${hrs.length} readings):\n`;
+    sum+=`  Min: ${Math.min(...hrs)} bpm\n  Max: ${Math.max(...hrs)} bpm\n`;
+    sum+=`  Mean: ${(hrs.reduce((a,b)=>a+b,0)/hrs.length).toFixed(1)} bpm\n\n`}
+
+  if(rrAll.length>1){
+    const rrs=rrAll.map(r=>r.rr);const mean=rrs.reduce((a,b)=>a+b,0)/rrs.length;
     const sdnn=Math.sqrt(rrs.reduce((s,r)=>s+(r-mean)**2,0)/rrs.length);
-    let sq=0;for(let i=1;i<rrs.length;i++)sq+=(rrs[i]-rrs[i-1])**2;const rmssd=Math.sqrt(sq/(rrs.length-1));
-    sum+='R-R Intervals ('+rrs.length+' beats):\n';
-    sum+='  Min: '+Math.min(...rrs).toFixed(1)+' ms\n  Max: '+Math.max(...rrs).toFixed(1)+' ms\n';
-    sum+='  Mean: '+mean.toFixed(1)+' ms\n  SDNN: '+sdnn.toFixed(1)+' ms\n  RMSSD: '+rmssd.toFixed(1)+' ms\n\n'}
-  if(respHistory.length>0){const rates=respHistory.map(r=>r.rate);
-    sum+='Respiration (EDR, '+respHistory.length+' estimates):\n';
-    sum+='  Min: '+Math.min(...rates).toFixed(1)+' br/min\n  Max: '+Math.max(...rates).toFixed(1)+' br/min\n';
-    sum+='  Mean: '+(rates.reduce((a,b)=>a+b,0)/rates.length).toFixed(1)+' br/min\n\n'}
-  if(qtcHistory.length>0){const qtcs=qtcHistory.map(q=>q.qtc);
-    sum+='QTc Interval (Bazett, '+qtcHistory.length+' estimates):\n';
-    sum+='  Min: '+Math.min(...qtcs)+' ms\n  Max: '+Math.max(...qtcs)+' ms\n';
-    sum+='  Mean: '+Math.round(qtcs.reduce((a,b)=>a+b,0)/qtcs.length)+' ms\n\n'}
+    let sq=0;for(let i=1;i<rrs.length;i++)sq+=(rrs[i]-rrs[i-1])**2;
+    const rmssd=Math.sqrt(sq/(rrs.length-1));
+    sum+=`R-R Intervals (${rrs.length} beats):\n`;
+    sum+=`  Min: ${Math.min(...rrs).toFixed(1)} ms\n  Max: ${Math.max(...rrs).toFixed(1)} ms\n`;
+    sum+=`  Mean: ${mean.toFixed(1)} ms\n  SDNN: ${sdnn.toFixed(1)} ms\n  RMSSD: ${rmssd.toFixed(1)} ms\n\n`}
 
-  sum+='Sound Monitoring\n'+'-'.repeat(30)+'\n';
-  sum+='Samples: '+soundAll.length+' (1/second)\n';
-  if(ambientBaseline!==null)sum+='Ambient baseline: '+ambientBaseline.toFixed(1)+'\n';
-  sum+='Snore threshold: '+SNORE_THRESHOLD_DB+' above ambient\n';
-  sum+='Snoring episodes (>3s): '+snoreLog.length+'\n';
-  if(snoreLog.length>0){
-    let totalSnoreS=0;
-    for(const s of snoreLog){
-      sum+='  '+s.start.toLocaleTimeString('en-GB')+' - '+s.end.toLocaleTimeString('en-GB');
-      sum+=' ('+s.duration_s+'s, avg '+s.avg_db+')\n';
-      totalSnoreS+=s.duration_s;
-    }
-    sum+='Total snoring time: '+Math.round(totalSnoreS/60)+' min\n';
-  }
+  if(respHistory.length>0){
+    const rates=respHistory.map(r=>r.rate);
+    sum+=`Respiration (EDR from ${respHistory.length} estimates):\n`;
+    sum+=`  Min: ${Math.min(...rates).toFixed(1)} br/min\n  Max: ${Math.max(...rates).toFixed(1)} br/min\n`;
+    sum+=`  Mean: ${(rates.reduce((a,b)=>a+b,0)/rates.length).toFixed(1)} br/min\n\n`}
+
+  if(qtcHistory.length>0){
+    const qtcs=qtcHistory.map(q=>q.qtc);
+    sum+=`QTc Interval (Bazett, ${qtcHistory.length} estimates):\n`;
+    sum+=`  Min: ${Math.min(...qtcs)} ms\n  Max: ${Math.max(...qtcs)} ms\n`;
+    sum+=`  Mean: ${Math.round(qtcs.reduce((a,b)=>a+b,0)/qtcs.length)} ms\n`;
+    sum+=`  NOTE: QTc >470ms (male) may indicate prolongation. Discuss with GP.\n\n`}
+
+  sum+=`Pattern Detection Report\n${'-'.repeat(30)}\n`;
+  sum+=`Long pauses (>2s): ${an.pauses}\n`;
+  sum+=`Possible ectopic beats: ${an.ectopics}\n`;
+  sum+=`Sustained high HR (>120): ${an.highHR}\n`;
+  sum+=`Sustained low HR (<40): ${an.lowHR}\n`;
+  sum+=`Irregular rhythm epochs: ${an.irregEp}\n`;
+  sum+=`Apnea-like episodes: ${apneaLog.length}\n`;
+  if(apneaLog.length>0){
+    sum+=`  (Cyclic brady-tachy patterns with >8bpm swing, 20-90s period)\n`;
+    for(const a of apneaLog)sum+=`  ${a.time.toLocaleTimeString('en-GB')}: ${a.cycles} cycles in ${a.window}\n`}
   sum+='\n';
+  sum+=`NOTE: This is not a medical device. All metrics are approximate\n`;
+  sum+=`and cannot diagnose any condition. Discuss concerns with your GP.\n`;
 
-  sum+='Pattern Detection Report\n'+'-'.repeat(30)+'\n';
-  sum+='Long pauses (>2s): '+an.pauses+'\n';
-  sum+='Possible ectopic beats: '+an.ectopics+'\n';
-  sum+='Sustained high HR (>120): '+an.highHR+'\n';
-  sum+='Sustained low HR (<40): '+an.lowHR+'\n';
-  sum+='Irregular rhythm epochs: '+an.irregEp+'\n';
-  sum+='Apnea-like episodes: '+apneaLog.length+'\n';
-  if(apneaLog.length>0)for(const a of apneaLog)sum+='  '+a.time.toLocaleTimeString('en-GB')+': '+a.cycles+' cycles in '+a.window+'\n';
-  sum+='\nNOTE: This is not a medical device. All metrics are approximate\nand cannot diagnose any condition. Discuss concerns with your GP.\n';
-
-  setTimeout(()=>dl('h10_summary_'+ds+'_'+ts+'.txt',sum),300*fc);
-  log('Exported '+(fc+1)+' files','ok');
+  setTimeout(()=>dl(`h10_summary_${ds}_${ts}.txt`,sum),300*fc);
+  log(`Exported ${fc+1} files`,'ok');
+  clearRecovery();// Clean up emergency dump after successful export
 }
 
 function dl(n,c){const b=new Blob([c],{type:'text/csv'});const u=URL.createObjectURL(b);
   const a=document.createElement('a');a.href=u;a.download=n;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)}
 
+// === Resize ===
 window.addEventListener('resize',drawActive);
 
-function tap(el,fn){let touched=false;
+// ============================================
+// DATA PROTECTION — beforeunload + emergency dump
+// ============================================
+const DB_NAME='h10_emergency';
+const DB_STORE='dump';
+const DB_VERSION=1;
+
+function hasData(){return rrAll.length>0||ecgAll.length>0||hrAll.length>0}
+
+// Warn before closing tab
+window.addEventListener('beforeunload',e=>{
+  if(hasData()){e.preventDefault();e.returnValue=''}
+});
+
+// Emergency dump to IndexedDB on page hide (fires reliably on tab close/nav)
+// This is near-instant — just serialises arrays, no BLE interruption
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VERSION);
+    req.onupgradeneeded=e=>{e.target.result.createObjectStore(DB_STORE)};
+    req.onsuccess=e=>resolve(e.target.result);
+    req.onerror=e=>reject(e.target.error);
+  });
+}
+
+async function emergencyDump(){
+  if(!hasData())return;
+  try{
+    const db=await openDB();
+    const payload={
+      timestamp:new Date().toISOString(),
+      startTime:startTime?startTime.toISOString():null,
+      mode,
+      batteryLevel,
+      ecgAll:ecgAll.length>0?ecgAll:null,
+      rrAll:rrAll.map(r=>({time:r.time.toISOString(),rr:r.rr})),
+      hrAll:hrAll.map(h=>({time:h.time.toISOString(),hr:h.hr})),
+      respHistory:respHistory.map(r=>({time:r.time.toISOString(),rate:r.rate})),
+      qtcHistory:qtcHistory.map(q=>({time:q.time.toISOString(),qtc:q.qtc})),
+      apneaLog:apneaLog.map(a=>({time:a.time.toISOString(),cycles:a.cycles,window:a.window})),
+      anomalies:{pauses:an.pauses,ectopics:an.ectopics,highHR:an.highHR,lowHR:an.lowHR,irregEp:an.irregEp}
+    };
+    const tx=db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).put(payload,'latest');
+    await new Promise((res,rej)=>{tx.oncomplete=res;tx.onerror=rej});
+    console.log('[H10] Emergency dump saved to IndexedDB');
+  }catch(e){console.error('[H10] Emergency dump failed:',e)}
+}
+
+// pagehide is more reliable than beforeunload for actual data saving
+document.addEventListener('pagehide',()=>emergencyDump());
+// Also dump when tab goes hidden (phone lock screen, task switch)
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'&&hasData())emergencyDump();
+});
+
+// === Recovery: check for orphaned data on load ===
+async function checkRecovery(){
+  try{
+    const db=await openDB();
+    const tx=db.transaction(DB_STORE,'readonly');
+    const req=tx.objectStore(DB_STORE).get('latest');
+    req.onsuccess=()=>{
+      const data=req.result;
+      if(!data)return;
+      const age=Date.now()-new Date(data.timestamp).getTime();
+      if(age>86400000){clearRecovery();return}// >24h old, discard
+      const rrCount=data.rrAll?data.rrAll.length:0;
+      const ecgCount=data.ecgAll?data.ecgAll.length:0;
+      const hrCount=data.hrAll?data.hrAll.length:0;
+      if(rrCount===0&&ecgCount===0&&hrCount===0){clearRecovery();return}
+      const started=data.startTime?new Date(data.startTime).toLocaleTimeString('en-GB'):'?';
+      const parts=[];
+      if(ecgCount)parts.push(`${ecgCount} ECG`);
+      if(rrCount)parts.push(`${rrCount} RR`);
+      if(hrCount)parts.push(`${hrCount} HR`);
+      showRecoveryBanner(data,started,parts.join(', '));
+    };
+  }catch(e){console.log('[H10] No recovery data')}
+}
+
+function showRecoveryBanner(data,started,summary){
+  const banner=document.createElement('div');
+  banner.id='recoveryBanner';
+  banner.style.cssText='padding:.5rem .8rem;background:rgba(59,130,246,.1);border-bottom:1px solid rgba(59,130,246,.2);font-family:JetBrains Mono,monospace;font-size:.55rem;color:#93c5fd;display:flex;align-items:center;justify-content:space-between;gap:.5rem';
+  banner.innerHTML=`
+    <span>🔄 Recovered session from ${started} — ${summary}</span>
+    <span style="display:flex;gap:.3rem">
+      <button id="recExport" style="flex:none;font-size:.5rem;padding:.2rem .5rem;border-radius:4px;background:#3b82f6;color:#fff;border:none;cursor:pointer;font-family:JetBrains Mono,monospace">EXPORT</button>
+      <button id="recDismiss" style="flex:none;font-size:.5rem;padding:.2rem .5rem;border-radius:4px;background:var(--sf2);color:var(--dm);border:1px solid var(--bd);cursor:pointer;font-family:JetBrains Mono,monospace">DISMISS</button>
+    </span>`;
+  document.body.insertBefore(banner,$('logArea').parentElement.querySelector('.hd')||document.body.firstChild);
+  // Insert after header
+  const hd=document.querySelector('.hd');
+  if(hd&&hd.nextSibling)hd.parentNode.insertBefore(banner,hd.nextSibling);
+
+  document.getElementById('recExport').addEventListener('click',()=>{
+    exportRecoveredData(data);
+    banner.remove();
+    clearRecovery();
+  });
+  document.getElementById('recDismiss').addEventListener('click',()=>{
+    banner.remove();
+    clearRecovery();
+  });
+}
+
+function exportRecoveredData(data){
+  const ds=data.startTime?data.startTime.slice(0,10):'unknown';
+  const ts=data.startTime?data.startTime.slice(11,16).replace(':',''):'0000';
+  let fc=0;
+
+  if(data.ecgAll&&data.ecgAll.length>0){
+    const t0=data.ecgAll[0].t_ms;let csv='elapsed_s,ecg_uv\n';
+    for(const s of data.ecgAll)csv+=`${((s.t_ms-t0)/1000).toFixed(6)},${s.uv}\n`;
+    dl(`h10_ecg_RECOVERED_${ds}_${ts}.csv`,csv);fc++;
+  }
+  if(data.rrAll&&data.rrAll.length>0){
+    let csv='timestamp,rr_interval_ms\n';
+    for(const r of data.rrAll)csv+=`${r.time},${r.rr}\n`;
+    setTimeout(()=>dl(`h10_rr_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
+  }
+  if(data.hrAll&&data.hrAll.length>0){
+    let csv='timestamp,heart_rate_bpm\n';
+    for(const h of data.hrAll)csv+=`${h.time},${h.hr}\n`;
+    setTimeout(()=>dl(`h10_hr_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
+  }
+  if(data.respHistory&&data.respHistory.length>0){
+    let csv='timestamp,resp_rate_brpm\n';
+    for(const r of data.respHistory)csv+=`${r.time},${r.rate.toFixed(1)}\n`;
+    setTimeout(()=>dl(`h10_resp_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
+  }
+  if(data.qtcHistory&&data.qtcHistory.length>0){
+    let csv='timestamp,qtc_ms\n';
+    for(const q of data.qtcHistory)csv+=`${q.time},${q.qtc}\n`;
+    setTimeout(()=>dl(`h10_qtc_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
+  }
+  log(`Exported ${fc} recovered files (RECOVERED_ prefix)`,'ok');
+}
+
+async function clearRecovery(){
+  try{
+    const db=await openDB();
+    const tx=db.transaction(DB_STORE,'readwrite');
+    tx.objectStore(DB_STORE).delete('latest');
+  }catch(e){}
+}
+
+// Clear recovery data after a successful manual export
+const _origExport=typeof exportAll==='function'?exportAll:null;
+
+// Check for recovery on load
+checkRecovery();
+
+// === Touch-friendly event listeners ===
+function tap(el,fn){
+  let touched=false;
   el.addEventListener('touchend',function(e){e.preventDefault();touched=true;fn();
     setTimeout(()=>{touched=false},300)},{passive:false});
-  el.addEventListener('click',function(){if(!touched)fn()})}
+  el.addEventListener('click',function(){if(!touched)fn()});
+}
 
 try{
   tap($('mFull'),()=>setMode('full'));
@@ -815,13 +1072,12 @@ try{
   tap($('tRR'),()=>showTab('rr'));
   tap($('tHR'),()=>showTab('hr'));
   tap($('tRSP'),()=>showTab('rsp'));
-  tap($('tSND'),()=>showTab('snd'));
   tap($('spdCh'),toggleSpeed);
   tap($('advDis'),dismissAdvisory);
   tap($('btnGo'),start);
   tap($('btnStop'),stop);
   tap($('btnExport'),exportAll);
-  log('v2 loaded - mic + snore detection ready','ok');
+  log('v3 loaded — ready to connect','ok');
 }catch(e){
   document.body.insertAdjacentHTML('afterbegin',
     '<div style="background:#ef4444;color:#fff;padding:10px;font-family:monospace;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:9999">Init: '+e.message+'</div>');
