@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>H10 Capture v3</title>
+<title>H10 Capture v4</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050809;--sf:#0c1117;--sf2:#141c27;--bd:#1a2332;--tx:#e2e8f0;--dm:#4a5568;
@@ -29,7 +29,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
   touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,255,136,.1);user-select:none}
 .mo.active{color:var(--grn);border-bottom-color:var(--grn)}
 .mo .md{font-family:'DM Sans',sans-serif;font-size:.42rem;opacity:.6;margin-top:.05rem;text-transform:none;letter-spacing:0}
-.vt{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bd);border-bottom:1px solid var(--bd);flex-shrink:0}
+.vt{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);border-bottom:1px solid var(--bd);flex-shrink:0}
 .vi{background:var(--sf);padding:.35rem .15rem;text-align:center}
 .vv{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:600;line-height:1}
 .vv.cr{color:var(--red)}.vv.cc{color:var(--cyn)}.vv.cg{color:var(--grn)}.vv.cp{color:var(--pur)}.vv.cb{color:var(--blu)}
@@ -85,7 +85,7 @@ button:active{transform:scale(.97)}
 </head>
 <body>
 <div class="hd">
-  <h1><span>H10</span> CAPTURE <span style="color:var(--pur)">v3</span></h1>
+  <h1><span>H10</span> CAPTURE <span style="color:var(--pur)">v4</span></h1>
   <div class="hdr">
     <div class="bt" id="battDisp" style="display:none">
       <div class="bt-box"><div class="bt-fill" id="battFill" style="width:0%;background:var(--grn)"></div></div>
@@ -106,6 +106,7 @@ button:active{transform:scale(.97)}
   <div class="vi"><div class="vv cg" id="vRMSSD">--</div><div class="vl">RMSSD</div></div>
   <div class="vi"><div class="vv cp" id="vResp">--</div><div class="vl">Resp/min</div></div>
   <div class="vi"><div class="vv cb" id="vQTc">--</div><div class="vl">QTc ms</div></div>
+  <div class="vi"><div class="vv" style="color:var(--amb)" id="vAct">--</div><div class="vl">Activity</div></div>
   <div class="vi"><div class="vv" id="vTime">00:00</div><div class="vl">Duration</div></div>
 </div>
 
@@ -114,6 +115,7 @@ button:active{transform:scale(.97)}
   <div class="ta" id="tRR">R-R</div>
   <div class="ta" id="tHR">HR</div>
   <div class="ta" id="tRSP">Resp</div>
+  <div class="ta" id="tACC">Accel</div>
 </div>
 
 <div class="cp eg vis" id="pECG"><canvas id="cECG"></canvas>
@@ -122,6 +124,7 @@ button:active{transform:scale(.97)}
 <div class="cp" id="pRR"><canvas id="cRR"></canvas></div>
 <div class="cp" id="pHR"><canvas id="cHR"></canvas></div>
 <div class="cp" id="pRSP"><canvas id="cRSP"></canvas></div>
+<div class="cp" id="pACC"><canvas id="cACC"></canvas></div>
 
 <div class="av" id="advisory">
   <div class="av-t">⚠ ADVISORY — PATTERNS DETECTED</div>
@@ -151,7 +154,7 @@ button:active{transform:scale(.97)}
   <button class="bg3" id="btnExport" disabled>Export</button>
 </div>
 
-<div class="ft">Polar H10 v3 — ECG 130Hz + EDR Respiration + Apnea Detection + QTc + Sound — not a medical device</div>
+<div class="ft">Polar H10 v4 — ECG 130Hz + ACC 25Hz + EDR Respiration + QTc + Sound — not a medical device</div>
 
 <script>
 // === Error display ===
@@ -176,7 +179,14 @@ const ecgAll=[],rrAll=[],hrAll=[];
 const ecgDraw=[],rrDraw=[],hrDraw=[],respDraw=[];
 const ECG_HZ=130;
 let ecgWin=8,ecgBuf=ECG_HZ*8,scrlSpd=25;
-const RR_MX=200,HR_MX=300,RSP_MX=120;
+const RR_MX=200,HR_MX=300,RSP_MX=120,ACC_MX=300;
+
+// Accelerometer — 1-second epoch activity counts
+let accOn=false;
+const accEpochs=[];    // {time, activity, mag}
+const accDraw=[];
+let accBuf=[];         // raw magnitudes within current epoch
+let accEpochStart=null;
 
 // Derived metrics
 let respRate=null;
@@ -264,7 +274,7 @@ function setMode(m){
 function showTab(t){
   if(t==='ecg'&&mode==='night')return;
   activeTab=t;
-  ['ECG','RR','HR','RSP'].forEach(id=>{
+  ['ECG','RR','HR','RSP','ACC'].forEach(id=>{
     $('p'+id).classList.toggle('vis',id===t.toUpperCase());
     $('t'+id).classList.toggle('active',id===t.toUpperCase());
   });
@@ -338,31 +348,49 @@ async function connectDevice(){
     // Battery
     await readBattery();
 
-    // ECG
-    ecgOn=false;
-    if(mode==='full'){
-      try{const ps=await server.getPrimaryService(PMD_SVC);
-        pmdCtl=await ps.getCharacteristic(PMD_CTL);
-        pmdDat=await ps.getCharacteristic(PMD_DAT);
-        await pmdDat.startNotifications();
-        pmdDat.addEventListener('characteristicvaluechanged',onECG);
-        await pmdCtl.writeValue(new Uint8Array([0x02,0x00,0x00,0x01,0x82,0x00,0x01,0x01,0x0E,0x00]));
-        ecgOn=true;log('ECG at 130 Hz','ok');
-      }catch(e){log('ECG unavailable: '+e.message,'wn')}
-    }else{log('Overnight — ECG skipped','ok')}
+    // PMD — always connect for ACC; add ECG in full mode
+    ecgOn=false;accOn=false;
+    try{
+      const ps=await server.getPrimaryService(PMD_SVC);
+      pmdCtl=await ps.getCharacteristic(PMD_CTL);
+      pmdDat=await ps.getCharacteristic(PMD_DAT);
+      await pmdDat.startNotifications();
+      pmdDat.addEventListener('characteristicvaluechanged',onPMD);
+
+      // ECG — full mode only
+      if(mode==='full'){
+        try{
+          await pmdCtl.writeValue(new Uint8Array([0x02,0x00,0x00,0x01,0x82,0x00,0x01,0x01,0x0E,0x00]));
+          ecgOn=true;log('ECG at 130 Hz','ok');
+        }catch(e){log('ECG start failed: '+e.message,'wn')}
+      }else{log('Overnight — ECG skipped','ok')}
+
+      // ACC — always on (25 Hz, 16-bit, ±8g)
+      try{
+        await pmdCtl.writeValue(new Uint8Array([
+          0x02,0x02,  // start ACC
+          0x00,0x01,0x19,0x00,  // sample rate 25 Hz
+          0x01,0x01,0x10,0x00,  // resolution 16 bits
+          0x02,0x01,0x08,0x00   // range ±8g
+        ]));
+        accOn=true;log('ACC at 25 Hz','ok');
+      }catch(e){log('ACC start failed: '+e.message,'wn')}
+
+    }catch(e){log('PMD service unavailable: '+e.message,'wn')}
 
     if(!recording){
       recording=true;startTime=new Date();
       Object.assign(an,{pauses:0,ectopics:0,highHR:0,lowHR:0,irregEp:0,apneaEp:0,lastIdx:0,dismissed:false});
       an.shown.clear();lastAnomChk=0;apneaEpisodes=0;apneaLog.length=0;
       soundAll.length=0;$('sSound').textContent='--'; // reset sound on new session
+      accEpochs.length=0;accDraw.length=0;accBuf=[];accEpochStart=null;$('vAct').textContent='--';
       $('advisory').classList.remove('show');
       clearRecovery();
       const rb=document.getElementById('recoveryBanner');if(rb)rb.remove();
     }
 
     reconnecting=false;reconnectAttempts=0;
-    $('badge').textContent=ecgOn?'ECG+RR':'RR LIVE';
+    $('badge').textContent=ecgOn?(accOn?'ECG+ACC+RR':'ECG+RR'):(accOn?'ACC+RR':'RR LIVE');
     $('badge').className='bg live';
     $('btnGo').disabled=true;$('btnStop').disabled=false;
     await getWL();
@@ -402,9 +430,17 @@ function onDC(){
   }
 }
 
+// === PMD Dispatcher ===
+function onPMD(ev){
+  const d=ev.target.value;if(d.byteLength<1)return;
+  const type=d.getUint8(0);
+  if(type===0x00)onECGData(d);
+  else if(type===0x02)onACCData(d);
+}
+
 // === Parse ECG ===
-function onECG(ev){
-  const d=ev.target.value;if(d.byteLength<1||d.getUint8(0)!==0x00)return;
+function onECGData(d){
+  if(d.byteLength<10)return;
   const now=performance.now();let off=10,idx=0;
   while(off+2<d.byteLength){
     let v=d.getUint8(off)|(d.getUint8(off+1)<<8)|(d.getUint8(off+2)<<16);
@@ -415,6 +451,33 @@ function onECG(ev){
     off+=3;idx++;
   }
   if(ecgAll.length%650===0&&ecgQTWindow.length>=ECG_HZ*2){estimateQTc()}
+}
+
+// === Parse ACC ===
+function onACCData(d){
+  if(d.byteLength<12)return;
+  // Bytes 1-8: timestamp, byte 9: frame type, then samples
+  // Each sample: 3 × int16 LE (x, y, z) = 6 bytes
+  const now=new Date();
+  let off=10;
+  while(off+5<d.byteLength){
+    const x=d.getInt16(off,true),y=d.getInt16(off+2,true),z=d.getInt16(off+4,true);
+    const mag=Math.sqrt(x*x+y*y+z*z);
+    accBuf.push(mag);
+    off+=6;
+  }
+  // Compute 1-second epoch activity count
+  if(!accEpochStart)accEpochStart=now;
+  if(now-accEpochStart>=1000&&accBuf.length>0){
+    let act=0;
+    for(let i=1;i<accBuf.length;i++)act+=Math.abs(accBuf[i]-accBuf[i-1]);
+    const meanMag=accBuf.reduce((a,b)=>a+b,0)/accBuf.length;
+    const epoch={time:now,activity:Math.round(act),mag:Math.round(meanMag)};
+    accEpochs.push(epoch);
+    accDraw.push(epoch.activity);if(accDraw.length>ACC_MX)accDraw.shift();
+    $('vAct').textContent=epoch.activity;
+    accBuf=[];accEpochStart=now;
+  }
 }
 
 // === Parse HR + RR ===
@@ -669,6 +732,7 @@ function drawActive(){
   else if(activeTab==='rr')drawRR();
   else if(activeTab==='hr')drawHRc();
   else if(activeTab==='rsp')drawResp();
+  else if(activeTab==='acc')drawACC();
 }
 
 function prep(cv){const cx=cv.getContext('2d');const dpr=window.devicePixelRatio||1;
@@ -718,6 +782,12 @@ function drawResp(){
   c.fillText('normal',W-40,Math.min(y12,y20)+10);
 }
 
+function drawACC(){
+  const[c,W,H]=prep($('cACC'));c.clearRect(0,0,W,H);
+  if(accDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('ACC data streaming...',W/2-70,H/2);return}
+  drawTrace(c,W,H,accDraw,ACC_MX,10,'#f59e0b','rgba(245,158,11,.1)');
+}
+
 function drawTrace(c,W,H,data,maxPts,margin,color,glow){
   const pad=25;const mn=Math.min(...data)-margin,mx=Math.max(...data)+margin,range=mx-mn||1;
   const step=(W-pad)/(maxPts-1),off=maxPts-data.length;
@@ -756,6 +826,7 @@ async function stop(){
   stopMic(); // stop microphone cleanly
   try{
     if(ecgOn&&pmdCtl)await pmdCtl.writeValue(new Uint8Array([0x03,0x00]));
+    if(accOn&&pmdCtl)try{await pmdCtl.writeValue(new Uint8Array([0x03,0x02]))}catch(e){}
     if(pmdDat)await pmdDat.stopNotifications();
     if(hrCh)await hrCh.stopNotifications();
     if(battCh)await battCh.stopNotifications();
@@ -772,6 +843,7 @@ async function stop(){
   if(respHistory.length)p.push(`${respHistory.length} resp`);
   if(qtcHistory.length)p.push(`${qtcHistory.length} QTc`);
   if(soundAll.length)p.push(`${soundAll.length} sound`);
+  if(accEpochs.length)p.push(`${accEpochs.length} acc`);
   log(`Stopped: ${p.join(', ')}`,'ok');
 }
 
@@ -811,6 +883,11 @@ function exportAll(){
     for(const s of soundAll)csv+=`${s.time.toISOString()},${((s.time.getTime()-t0)/1000).toFixed(1)},${s.db}\n`;
     setTimeout(()=>dl(`h10_sound_${ds}_${ts}.csv`,csv),300*fc);fc++}
 
+  if(accEpochs.length>0){
+    let csv='timestamp,elapsed_s,activity_count,mean_magnitude\n';const t0a=startTime.getTime();
+    for(const a of accEpochs)csv+=`${a.time.toISOString()},${((a.time.getTime()-t0a)/1000).toFixed(1)},${a.activity},${a.mag}\n`;
+    setTimeout(()=>dl(`h10_acc_${ds}_${ts}.csv`,csv),300*fc);fc++}
+
   // Summary
   let sum=`H10 Capture v3 Summary\n${'='.repeat(40)}\n`;
   sum+=`Date: ${ds}\nStart: ${startTime.toLocaleTimeString('en-GB')}\n`;
@@ -847,6 +924,12 @@ function exportAll(){
     sum+=`  Min: ${Math.min(...qtcs)} ms\n  Max: ${Math.max(...qtcs)} ms\n`;
     sum+=`  Mean: ${Math.round(qtcs.reduce((a,b)=>a+b,0)/qtcs.length)} ms\n`;
     sum+=`  NOTE: QTc >470ms (male) may indicate prolongation. Discuss with GP.\n\n`}
+
+  if(accEpochs.length>0){
+    const acts=accEpochs.map(a=>a.activity);
+    sum+=`Accelerometer (${accEpochs.length} epochs at 1 Hz):\n`;
+    sum+=`  Min activity: ${Math.min(...acts)}\n  Max activity: ${Math.max(...acts)}\n`;
+    sum+=`  Mean activity: ${Math.round(acts.reduce((a,b)=>a+b,0)/acts.length)}\n\n`}
 
   if(soundAll.length>0){
     const dbs=soundAll.map(s=>s.db);
@@ -918,6 +1001,7 @@ async function emergencyDump(){
       respHistory:respHistory.map(r=>({time:r.time.toISOString(),rate:r.rate})),
       qtcHistory:qtcHistory.map(q=>({time:q.time.toISOString(),qtc:q.qtc})),
       soundAll:soundAll.map(s=>({time:s.time.toISOString(),db:s.db})),
+      accEpochs:accEpochs.map(a=>({time:a.time.toISOString(),activity:a.activity,mag:a.mag})),
       apneaLog:apneaLog.map(a=>({time:a.time.toISOString(),cycles:a.cycles,window:a.window})),
       anomalies:{pauses:an.pauses,ectopics:an.ectopics,highHR:an.highHR,lowHR:an.lowHR,irregEp:an.irregEp}
     };
@@ -954,6 +1038,7 @@ async function checkRecovery(){
       if(rrCount)parts.push(`${rrCount} RR`);
       if(hrCount)parts.push(`${hrCount} HR`);
       if(data.soundAll&&data.soundAll.length)parts.push(`${data.soundAll.length} sound`);
+      if(data.accEpochs&&data.accEpochs.length)parts.push(`${data.accEpochs.length} acc`);
       showRecoveryBanner(data,started,parts.join(', '));
     };
   }catch(e){console.log('[H10] No recovery data')}
@@ -1019,6 +1104,11 @@ function exportRecoveredData(data){
     for(const s of data.soundAll)csv+=`${s.time},${s.db}\n`;
     setTimeout(()=>dl(`h10_sound_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
   }
+  if(data.accEpochs&&data.accEpochs.length>0){
+    let csv='timestamp,activity_count,mean_magnitude\n';
+    for(const a of data.accEpochs)csv+=`${a.time},${a.activity},${a.mag}\n`;
+    setTimeout(()=>dl(`h10_acc_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
+  }
   log(`Exported ${fc} recovered files (RECOVERED_ prefix)`,'ok');
 }
 
@@ -1047,12 +1137,13 @@ try{
   tap($('tRR'),()=>showTab('rr'));
   tap($('tHR'),()=>showTab('hr'));
   tap($('tRSP'),()=>showTab('rsp'));
+  tap($('tACC'),()=>showTab('acc'));
   tap($('spdCh'),toggleSpeed);
   tap($('advDis'),dismissAdvisory);
   tap($('btnGo'),start);
   tap($('btnStop'),stop);
   tap($('btnExport'),exportAll);
-  log('v3 loaded — ready to connect','ok');
+  log('v4 loaded — ACC + ECG + sound','ok');
 }catch(e){
   document.body.insertAdjacentHTML('afterbegin',
     '<div style="background:#ef4444;color:#fff;padding:10px;font-family:monospace;font-size:12px;position:fixed;top:0;left:0;right:0;z-index:9999">Init: '+e.message+'</div>');
