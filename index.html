@@ -58,7 +58,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);
 .av-m .fi{color:var(--amb);margin-right:.2rem}
 .av-f{margin-top:.3rem;padding-top:.2rem;border-top:1px solid rgba(245,158,11,.08);font-size:.45rem;color:var(--dm);font-style:italic;line-height:1.4}
 .av-d{margin-top:.25rem;font-family:'JetBrains Mono',monospace;font-size:.45rem;color:var(--dm);text-decoration:underline;touch-action:manipulation;user-select:none}
-.st{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--bd);
+/* Stats row — 7 columns to accommodate dB SPL */
+.st{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--bd);
   border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);flex-shrink:0}
 .si{background:var(--sf);padding:.3rem .15rem;text-align:center}
 .sv{font-family:'JetBrains Mono',monospace;font-size:.65rem;font-weight:500}
@@ -139,6 +140,7 @@ button:active{transform:scale(.97)}
   <div class="si"><div class="sv" id="sBeats">0</div><div class="sl">Beats</div></div>
   <div class="si"><div class="sv" id="sApnea">0</div><div class="sl">Apnea ep</div></div>
   <div class="si"><div class="sv" id="sQTcAvg">--</div><div class="sl">Avg QTc</div></div>
+  <div class="si"><div class="sv" id="sSound" style="color:var(--amb)">--</div><div class="sl">dB SPL</div></div>
 </div>
 
 <div class="lo" id="logArea"></div>
@@ -149,7 +151,7 @@ button:active{transform:scale(.97)}
   <button class="bg3" id="btnExport" disabled>Export</button>
 </div>
 
-<div class="ft">Polar H10 v3 — ECG 130Hz + EDR Respiration + Apnea Detection + QTc — not a medical device</div>
+<div class="ft">Polar H10 v3 — ECG 130Hz + EDR Respiration + Apnea Detection + QTc + Sound — not a medical device</div>
 
 <script>
 // === Error display ===
@@ -192,6 +194,51 @@ let lastAnomChk=0;
 // ECG QT detection state
 const qtcBuffer=[];     // recent QTc values
 const ecgQTWindow=[];   // ECG samples for QT analysis
+
+// ============================================
+// SOUND — Web Audio API, 1 Hz sampling
+// Records ambient sound level as approximate dB SPL.
+// dBFS from RMS + ~90 dB offset (typical phone mic).
+// Not calibrated — useful for relative comparison.
+// ============================================
+const soundAll=[];      // {time, db}
+let audioCtx=null, analyser=null, micStream=null, soundInterval=null;
+
+async function startMic(){
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(micStream);
+    analyser=audioCtx.createAnalyser();
+    analyser.fftSize=2048;
+    src.connect(analyser);
+    soundInterval=setInterval(sampleSound,1000);
+    log('Microphone active — sound recording on','ok');
+  }catch(e){
+    log('Mic unavailable: '+e.message+' (no sound data)','wn');
+  }
+}
+
+function sampleSound(){
+  if(!analyser)return;
+  const buf=new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(buf);
+  let sum=0;
+  for(let i=0;i<buf.length;i++)sum+=buf[i]*buf[i];
+  const rms=Math.sqrt(sum/buf.length);
+  // dBFS → approximate SPL via +90 dB offset (empirical for phone mics)
+  const dbfs=rms>0?20*Math.log10(rms):-100;
+  const spl=Math.max(0,Math.round((dbfs+90)*10)/10);
+  soundAll.push({time:new Date(),db:spl});
+  $('sSound').textContent=Math.round(spl);
+}
+
+function stopMic(){
+  if(soundInterval){clearInterval(soundInterval);soundInterval=null}
+  if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null}
+  if(audioCtx){audioCtx.close();audioCtx=null}
+  analyser=null;
+}
 
 let activeTab='ecg';
 let batteryLevel=null;
@@ -243,7 +290,6 @@ async function readBattery(){
     battCh=await bs.getCharacteristic(BATT_CHR);
     const v=await battCh.readValue();
     updateBattDisplay(v.getUint8(0));
-    // Listen for changes
     await battCh.startNotifications();
     battCh.addEventListener('characteristicvaluechanged',e=>{updateBattDisplay(e.target.value.getUint8(0))});
     log('Battery monitoring active','ok');
@@ -309,8 +355,9 @@ async function connectDevice(){
       recording=true;startTime=new Date();
       Object.assign(an,{pauses:0,ectopics:0,highHR:0,lowHR:0,irregEp:0,apneaEp:0,lastIdx:0,dismissed:false});
       an.shown.clear();lastAnomChk=0;apneaEpisodes=0;apneaLog.length=0;
+      soundAll.length=0;$('sSound').textContent='--'; // reset sound on new session
       $('advisory').classList.remove('show');
-      clearRecovery();// Discard any old emergency dump
+      clearRecovery();
       const rb=document.getElementById('recoveryBanner');if(rb)rb.remove();
     }
 
@@ -318,7 +365,9 @@ async function connectDevice(){
     $('badge').textContent=ecgOn?'ECG+RR':'RR LIVE';
     $('badge').className='bg live';
     $('btnGo').disabled=true;$('btnStop').disabled=false;
-    await getWL();rafLoop();
+    await getWL();
+    await startMic(); // start microphone after BLE is up
+    rafLoop();
   }catch(e){
     log('Connect failed: '+e.message,'er');
     if(recording&&autoReconnect)scheduleReconnect();
@@ -362,11 +411,9 @@ function onECG(ev){
     if(v&0x800000)v|=~0xFFFFFF;
     ecgAll.push({t_ms:now+(idx/ECG_HZ)*1000,uv:v});
     ecgDraw.push(v);if(ecgDraw.length>ecgBuf)ecgDraw.shift();
-    // QT window: keep last 2 seconds for analysis
     ecgQTWindow.push(v);if(ecgQTWindow.length>ECG_HZ*2)ecgQTWindow.shift();
     off+=3;idx++;
   }
-  // QTc estimation every ~5 seconds
   if(ecgAll.length%650===0&&ecgQTWindow.length>=ECG_HZ*2){estimateQTc()}
 }
 
@@ -391,12 +438,9 @@ function onHR(ev){
     }
   }
   updateStats();
-  // Periodic checks
   const elapsed=Date.now()-(startTime?startTime.getTime():Date.now());
   if(elapsed-lastAnomChk>ANOM_INT&&rrAll.length>30){lastAnomChk=elapsed;checkAnomalies()}
-  // Respiration every 30s
   if(rrAll.length%30===0&&rrAll.length>=60)calcRespiration();
-  // Apnea check every 2 min
   if(rrAll.length%120===0&&rrAll.length>=300)checkApnea();
 }
 
@@ -421,15 +465,10 @@ function updateStats(){
 
 // ============================================
 // EDR — Respiration from R-R intervals
-// Uses respiratory sinus arrhythmia: R-R intervals
-// modulate at breathing frequency (0.15-0.4 Hz = 9-24 br/min)
 // ============================================
 function calcRespiration(){
-  // Need at least 60 R-R intervals
   const rrs=rrAll.slice(-120).map(r=>r.rr);
   if(rrs.length<60)return;
-
-  // Interpolate to uniform 4 Hz
   const times=[];let t=0;
   for(let i=0;i<rrs.length;i++){times.push(t);t+=rrs[i]/1000}
   const fs=4;const dur=t;
@@ -437,29 +476,19 @@ function calcRespiration(){
   const uniform=[];
   for(let i=0;i<n;i++){
     const ti=i/fs;
-    // Find surrounding R-R intervals
     let j=0;while(j<times.length-1&&times[j+1]<ti)j++;
     if(j>=times.length-1){uniform.push(rrs[rrs.length-1]);continue}
     const frac=(ti-times[j])/(times[j+1]-times[j]);
     uniform.push(rrs[j]+(rrs[j+1]-rrs[j])*frac);
   }
-
   if(uniform.length<32)return;
-
-  // Remove mean
   const mean=uniform.reduce((a,b)=>a+b,0)/uniform.length;
   const centered=uniform.map(v=>v-mean);
-
-  // Hanning window
   const windowed=centered.map((v,i)=>v*0.5*(1-Math.cos(2*Math.PI*i/(centered.length-1))));
-
-  // FFT via DFT (small enough at 4Hz for ~30s)
   const N=windowed.length;
-  const mag=[];
-  const freqMin=0.15,freqMax=0.4;// 9-24 br/min
+  const freqMin=0.15,freqMax=0.4;
   const binMin=Math.floor(freqMin*N/fs);
   const binMax=Math.ceil(freqMax*N/fs);
-
   let maxMag=0,maxBin=binMin;
   for(let k=binMin;k<=binMax&&k<N/2;k++){
     let re=0,im=0;
@@ -471,10 +500,8 @@ function calcRespiration(){
     const m=Math.sqrt(re*re+im*im);
     if(m>maxMag){maxMag=m;maxBin=k}
   }
-
   const peakFreq=maxBin*fs/N;
-  respRate=peakFreq*60;// breaths per minute
-
+  respRate=peakFreq*60;
   if(respRate>=6&&respRate<=30){
     $('vResp').textContent=respRate.toFixed(1);
     respHistory.push({time:new Date(),rate:respRate});
@@ -485,63 +512,40 @@ function calcRespiration(){
 
 // ============================================
 // QTc Estimation from ECG waveform
-// Simplified: detect R-peaks and T-wave ends in 2s window
-// Bazett's: QTc = QT / sqrt(RR)
 // ============================================
 function estimateQTc(){
   if(ecgQTWindow.length<ECG_HZ*1.5)return;
   if(rrAll.length<2)return;
-
   const sig=ecgQTWindow.slice();
   const N=sig.length;
-
-  // Simple R-peak detection: find max positive value
   let maxVal=-Infinity,maxIdx=0;
   for(let i=Math.floor(N*0.1);i<Math.floor(N*0.5);i++){
     if(sig[i]>maxVal){maxVal=sig[i];maxIdx=i}
   }
-
-  // Find R-peak must be prominent
   const baseline=sig.reduce((a,b)=>a+b,0)/N;
-  if(maxVal<baseline+200)return;// No clear R-peak
-
-  // Estimate T-wave end: search 150-400ms after R-peak
+  if(maxVal<baseline+200)return;
   const searchStart=maxIdx+Math.floor(0.15*ECG_HZ);
   const searchEnd=Math.min(maxIdx+Math.floor(0.45*ECG_HZ),N-1);
   if(searchEnd>=N)return;
-
-  // Find T-wave peak (positive or negative bump after R)
   let tPeak=searchStart,tPeakVal=0;
   for(let i=searchStart;i<=searchEnd;i++){
     const v=Math.abs(sig[i]-baseline);
     if(v>tPeakVal){tPeakVal=v;tPeak=i}
   }
-
-  // T-wave end: where signal returns to baseline after T-peak
   let tEnd=tPeak;
   for(let i=tPeak;i<Math.min(tPeak+Math.floor(0.15*ECG_HZ),N);i++){
     if(Math.abs(sig[i]-baseline)<Math.abs(sig[tPeak]-baseline)*0.3){tEnd=i;break}
   }
   if(tEnd<=tPeak)tEnd=tPeak+Math.floor(0.05*ECG_HZ);
-
-  // QT interval in ms
   const qtMs=(tEnd-maxIdx)/ECG_HZ*1000;
-  if(qtMs<200||qtMs>600)return;// Unrealistic
-
-  // Current R-R in seconds
+  if(qtMs<200||qtMs>600)return;
   const rrSec=rrAll[rrAll.length-1].rr/1000;
   if(rrSec<0.4||rrSec>2.0)return;
-
-  // Bazett's correction
   const qtc=qtMs/Math.sqrt(rrSec);
-  if(qtc<300||qtc>600)return;// Sanity check
-
+  if(qtc<300||qtc>600)return;
   qtcHistory.push({time:new Date(),qtc:Math.round(qtc)});
   qtcBuffer.push(qtc);if(qtcBuffer.length>60)qtcBuffer.shift();
-
   $('vQTc').textContent=Math.round(qtc);
-
-  // Rolling average
   if(qtcBuffer.length>5){
     const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
     $('sQTcAvg').textContent=Math.round(avg);
@@ -550,100 +554,68 @@ function estimateQTc(){
 
 // ============================================
 // Sleep Apnea Detection
-// Looks for cyclic HR variation: repeated brady-tachy
-// patterns with period 30-90 seconds
 // ============================================
 function checkApnea(){
-  // Need at least 5 minutes of data
   if(rrAll.length<300)return;
-
-  // Take last 5 minutes of R-R data
   const window=rrAll.slice(-300);
-  const hrs=window.map(r=>60000/r.rr);// Convert to instantaneous HR
-
-  // Smooth with 5-beat moving average
+  const hrs=window.map(r=>60000/r.rr);
   const smooth=[];
   for(let i=2;i<hrs.length-2;i++){
     smooth.push((hrs[i-2]+hrs[i-1]+hrs[i]+hrs[i+1]+hrs[i+2])/5);
   }
-
   if(smooth.length<100)return;
-
-  // Calculate times for each sample
   const times2=[];let t2=0;
   for(let i=2;i<window.length-2;i++){t2+=window[i].rr/1000;times2.push(t2)}
-
-  // Look for cyclical pattern: count significant peaks and troughs
-  // A cycle = HR drops then rises sharply
   let cycles=0;
-  const threshold=5;// bpm swing
+  const threshold=5;
   let state='neutral',localMin=Infinity,localMax=-Infinity;
   let cycleStart=0;
-
   for(let i=1;i<smooth.length;i++){
     if(smooth[i]<localMin)localMin=smooth[i];
     if(smooth[i]>localMax)localMax=smooth[i];
-
     if(state==='neutral'){
       if(smooth[i]<smooth[i-1]-1){state='falling';localMin=smooth[i];cycleStart=times2[i]}
       else if(smooth[i]>smooth[i-1]+1){state='rising';localMax=smooth[i]}
     }else if(state==='falling'){
       if(smooth[i]<localMin)localMin=smooth[i];
-      if(smooth[i]>localMin+threshold){
-        state='rising';localMax=smooth[i];
-      }
+      if(smooth[i]>localMin+threshold){state='rising';localMax=smooth[i]}
     }else if(state==='rising'){
       if(smooth[i]>localMax)localMax=smooth[i];
       if(smooth[i]<localMax-threshold){
         const swing=localMax-localMin;
         const duration=times2[i]-cycleStart;
-        // Apnea-like cycle: 20-90 second period, >8 bpm swing
-        if(duration>=20&&duration<=90&&swing>=8){
-          cycles++;
-        }
+        if(duration>=20&&duration<=90&&swing>=8)cycles++;
         state='falling';localMin=smooth[i];localMax=-Infinity;cycleStart=times2[i];
       }
     }
   }
-
-  // 3+ cycles in 5 minutes suggests possible apnea pattern
   if(cycles>=3){
     const prevEp=apneaEpisodes;
     apneaEpisodes=Math.max(apneaEpisodes,apneaLog.length+1);
-    apneaLog.push({
-      time:new Date(),
-      cycles:cycles,
-      window:'5min'
-    });
+    apneaLog.push({time:new Date(),cycles:cycles,window:'5min'});
     $('sApnea').textContent=apneaLog.length;
-    if(apneaLog.length>prevEp){
-      an.apneaEp=apneaLog.length;
-    }
+    if(apneaLog.length>prevEp)an.apneaEp=apneaLog.length;
   }
 }
 
 // ============================================
-// Anomaly Detection (from v1 + apnea)
+// Anomaly Detection
 // ============================================
 function checkAnomalies(){
   const si=an.lastIdx;const rrs=rrAll.map(r=>r.rr);
   if(rrs.length<10)return;
   const newRR=rrs.slice(si);an.lastIdx=rrs.length;
-
   for(const rr of newRR){if(rr>2000)an.pauses++}
-
   for(let i=si+1;i<rrs.length-1;i++){
     const ls=Math.max(0,i-10);const loc=rrs.slice(ls,i);
     if(loc.length<5)continue;
     const lm=loc.reduce((a,b)=>a+b,0)/loc.length;
     if(rrs[i]<lm*0.75&&rrs[i+1]>lm*1.15)an.ectopics++;
   }
-
   let hc=0;for(let i=si;i<hrAll.length;i++){
     if(hrAll[i].hr>120){hc++;if(hc>=30){an.highHR++;hc=0}}else hc=0}
   let lc=0;for(let i=si;i<hrAll.length;i++){
     if(hrAll[i].hr<40){lc++;if(lc>=10){an.lowHR++;lc=0}}else lc=0}
-
   if(newRR.length>=30){
     for(let w=0;w<=newRR.length-30;w+=30){
       const win=newRR.slice(w,w+30);
@@ -654,22 +626,16 @@ function checkAnomalies(){
       if(cv>0.18&&nn50/(win.length-1)>0.5)an.irregEp++;
     }
   }
-
-  // QTc check: prolonged QTc > 470ms (male threshold)
   if(qtcBuffer.length>10){
     const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
-    if(avg>470&&!an.shown.has('qtc')){
-      an.shown.add('qtc');// Will be picked up in showAdvisory
-    }
+    if(avg>470&&!an.shown.has('qtc'))an.shown.add('qtc');
   }
-
   showAdvisory();
 }
 
 function showAdvisory(){
   if(an.dismissed)return;
   const flags=[];
-
   if(an.pauses>=3&&!an.shown.has('pause'))
     flags.push({key:'pause',text:`${an.pauses} pauses >2 seconds detected. Occasional pauses can occur during sleep, but frequent long pauses may be worth discussing with your GP.`});
   if(an.ectopics>=10&&!an.shown.has('ectopic'))
@@ -686,7 +652,6 @@ function showAdvisory(){
     const avg=qtcBuffer.reduce((a,b)=>a+b,0)/qtcBuffer.length;
     flags.push({key:'qtc_flag',text:`Average QTc interval of ${Math.round(avg)} ms is above the 470 ms threshold for males. Prolonged QTc can be associated with certain medications including some ADT drugs. Worth discussing with your treatment team.`});
   }
-
   if(flags.length===0)return;
   flags.forEach(f=>an.shown.add(f.key));
   $('advMsg').innerHTML=flags.map(f=>`<span class="fl"><span class="fi">▸</span>${f.text}</span>`).join('');
@@ -743,7 +708,6 @@ function drawResp(){
   const[c,W,H]=prep($('cRSP'));c.clearRect(0,0,W,H);
   if(respDraw.length<2){c.font='11px JetBrains Mono';c.fillStyle='rgba(74,85,104,.5)';c.fillText('Resp rate calculating...',W/2-75,H/2);return}
   drawTrace(c,W,H,respDraw,RSP_MX,2,'#a78bfa','rgba(167,139,250,.1)');
-  // Reference band 12-20 br/min
   const mn=Math.min(...respDraw)-2,mx=Math.max(...respDraw)+2,range=mx-mn||1;
   const pad=25;
   const y12=pad/2+(1-(12-mn)/range)*(H-pad);
@@ -789,6 +753,7 @@ setInterval(async()=>{if(recording&&battCh){
 // === Stop ===
 async function stop(){
   autoReconnect=false;recording=false;
+  stopMic(); // stop microphone cleanly
   try{
     if(ecgOn&&pmdCtl)await pmdCtl.writeValue(new Uint8Array([0x03,0x00]));
     if(pmdDat)await pmdDat.stopNotifications();
@@ -801,11 +766,12 @@ async function stop(){
   if(rrAll.length>0||ecgAll.length>0)$('btnExport').disabled=false;
   if(wakeLock){wakeLock.release();wakeLock=null}
   if(rrAll.length>30){an.dismissed=false;checkAnomalies()}
-  autoReconnect=true;// Reset for next session
+  autoReconnect=true;
   const p=[];if(ecgAll.length)p.push(`${ecgAll.length} ECG`);
   if(rrAll.length)p.push(`${rrAll.length} RR`);if(hrAll.length)p.push(`${hrAll.length} HR`);
   if(respHistory.length)p.push(`${respHistory.length} resp`);
   if(qtcHistory.length)p.push(`${qtcHistory.length} QTc`);
+  if(soundAll.length)p.push(`${soundAll.length} sound`);
   log(`Stopped: ${p.join(', ')}`,'ok');
 }
 
@@ -839,6 +805,11 @@ function exportAll(){
     let csv='timestamp,qtc_ms\n';
     for(const q of qtcHistory)csv+=`${q.time.toISOString()},${q.qtc}\n`;
     setTimeout(()=>dl(`h10_qtc_${ds}_${ts}.csv`,csv),300*fc);fc++}
+
+  if(soundAll.length>0){
+    let csv='timestamp,elapsed_s,sound_level_db\n';const t0=startTime.getTime();
+    for(const s of soundAll)csv+=`${s.time.toISOString()},${((s.time.getTime()-t0)/1000).toFixed(1)},${s.db}\n`;
+    setTimeout(()=>dl(`h10_sound_${ds}_${ts}.csv`,csv),300*fc);fc++}
 
   // Summary
   let sum=`H10 Capture v3 Summary\n${'='.repeat(40)}\n`;
@@ -877,6 +848,13 @@ function exportAll(){
     sum+=`  Mean: ${Math.round(qtcs.reduce((a,b)=>a+b,0)/qtcs.length)} ms\n`;
     sum+=`  NOTE: QTc >470ms (male) may indicate prolongation. Discuss with GP.\n\n`}
 
+  if(soundAll.length>0){
+    const dbs=soundAll.map(s=>s.db);
+    sum+=`Ambient Sound (${soundAll.length} samples at 1 Hz):\n`;
+    sum+=`  Min: ${Math.min(...dbs).toFixed(1)} dB\n  Max: ${Math.max(...dbs).toFixed(1)} dB\n`;
+    sum+=`  Mean: ${(dbs.reduce((a,b)=>a+b,0)/dbs.length).toFixed(1)} dB\n`;
+    sum+=`  NOTE: Approximate dB SPL — not calibrated, relative comparison only.\n\n`}
+
   sum+=`Pattern Detection Report\n${'-'.repeat(30)}\n`;
   sum+=`Long pauses (>2s): ${an.pauses}\n`;
   sum+=`Possible ectopic beats: ${an.ectopics}\n`;
@@ -893,7 +871,7 @@ function exportAll(){
 
   setTimeout(()=>dl(`h10_summary_${ds}_${ts}.txt`,sum),300*fc);
   log(`Exported ${fc+1} files`,'ok');
-  clearRecovery();// Clean up emergency dump after successful export
+  clearRecovery();
 }
 
 function dl(n,c){const b=new Blob([c],{type:'text/csv'});const u=URL.createObjectURL(b);
@@ -912,13 +890,10 @@ const DB_VERSION=1;
 
 function hasData(){return rrAll.length>0||ecgAll.length>0||hrAll.length>0}
 
-// Warn before closing tab
 window.addEventListener('beforeunload',e=>{
   if(hasData()){e.preventDefault();e.returnValue=''}
 });
 
-// Emergency dump to IndexedDB on page hide (fires reliably on tab close/nav)
-// This is near-instant — just serialises arrays, no BLE interruption
 function openDB(){
   return new Promise((resolve,reject)=>{
     const req=indexedDB.open(DB_NAME,DB_VERSION);
@@ -942,6 +917,7 @@ async function emergencyDump(){
       hrAll:hrAll.map(h=>({time:h.time.toISOString(),hr:h.hr})),
       respHistory:respHistory.map(r=>({time:r.time.toISOString(),rate:r.rate})),
       qtcHistory:qtcHistory.map(q=>({time:q.time.toISOString(),qtc:q.qtc})),
+      soundAll:soundAll.map(s=>({time:s.time.toISOString(),db:s.db})),
       apneaLog:apneaLog.map(a=>({time:a.time.toISOString(),cycles:a.cycles,window:a.window})),
       anomalies:{pauses:an.pauses,ectopics:an.ectopics,highHR:an.highHR,lowHR:an.lowHR,irregEp:an.irregEp}
     };
@@ -952,14 +928,12 @@ async function emergencyDump(){
   }catch(e){console.error('[H10] Emergency dump failed:',e)}
 }
 
-// pagehide is more reliable than beforeunload for actual data saving
 document.addEventListener('pagehide',()=>emergencyDump());
-// Also dump when tab goes hidden (phone lock screen, task switch)
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'&&hasData())emergencyDump();
 });
 
-// === Recovery: check for orphaned data on load ===
+// === Recovery ===
 async function checkRecovery(){
   try{
     const db=await openDB();
@@ -969,7 +943,7 @@ async function checkRecovery(){
       const data=req.result;
       if(!data)return;
       const age=Date.now()-new Date(data.timestamp).getTime();
-      if(age>86400000){clearRecovery();return}// >24h old, discard
+      if(age>86400000){clearRecovery();return}
       const rrCount=data.rrAll?data.rrAll.length:0;
       const ecgCount=data.ecgAll?data.ecgAll.length:0;
       const hrCount=data.hrAll?data.hrAll.length:0;
@@ -979,6 +953,7 @@ async function checkRecovery(){
       if(ecgCount)parts.push(`${ecgCount} ECG`);
       if(rrCount)parts.push(`${rrCount} RR`);
       if(hrCount)parts.push(`${hrCount} HR`);
+      if(data.soundAll&&data.soundAll.length)parts.push(`${data.soundAll.length} sound`);
       showRecoveryBanner(data,started,parts.join(', '));
     };
   }catch(e){console.log('[H10] No recovery data')}
@@ -994,10 +969,9 @@ function showRecoveryBanner(data,started,summary){
       <button id="recExport" style="flex:none;font-size:.5rem;padding:.2rem .5rem;border-radius:4px;background:#3b82f6;color:#fff;border:none;cursor:pointer;font-family:JetBrains Mono,monospace">EXPORT</button>
       <button id="recDismiss" style="flex:none;font-size:.5rem;padding:.2rem .5rem;border-radius:4px;background:var(--sf2);color:var(--dm);border:1px solid var(--bd);cursor:pointer;font-family:JetBrains Mono,monospace">DISMISS</button>
     </span>`;
-  document.body.insertBefore(banner,$('logArea').parentElement.querySelector('.hd')||document.body.firstChild);
-  // Insert after header
   const hd=document.querySelector('.hd');
   if(hd&&hd.nextSibling)hd.parentNode.insertBefore(banner,hd.nextSibling);
+  else document.body.insertBefore(banner,document.body.firstChild);
 
   document.getElementById('recExport').addEventListener('click',()=>{
     exportRecoveredData(data);
@@ -1040,6 +1014,11 @@ function exportRecoveredData(data){
     for(const q of data.qtcHistory)csv+=`${q.time},${q.qtc}\n`;
     setTimeout(()=>dl(`h10_qtc_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
   }
+  if(data.soundAll&&data.soundAll.length>0){
+    let csv='timestamp,sound_level_db\n';
+    for(const s of data.soundAll)csv+=`${s.time},${s.db}\n`;
+    setTimeout(()=>dl(`h10_sound_RECOVERED_${ds}_${ts}.csv`,csv),300*fc);fc++;
+  }
   log(`Exported ${fc} recovered files (RECOVERED_ prefix)`,'ok');
 }
 
@@ -1051,10 +1030,6 @@ async function clearRecovery(){
   }catch(e){}
 }
 
-// Clear recovery data after a successful manual export
-const _origExport=typeof exportAll==='function'?exportAll:null;
-
-// Check for recovery on load
 checkRecovery();
 
 // === Touch-friendly event listeners ===
